@@ -14,7 +14,7 @@ with open(os.path.join(THIS_FILE_DIR, 'README.md'), encoding='utf-8') as f:
     LONG_DESCRIPTION = f.read()
 
 # The full version, including alpha/beta/rc tags
-RELEASE = '1.0.1'
+RELEASE = '1.0.2'
 # The short X.Y version
 VERSION = '.'.join(RELEASE.split('.')[:2])
 
@@ -34,6 +34,7 @@ setup(
     ],
     description='A package for optimization solvers',
     long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
     license='MIT',
     packages=find_packages('src', exclude=['docs', 'tests']),
     package_dir={'': 'src'},

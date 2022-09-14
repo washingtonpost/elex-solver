@@ -1,5 +1,8 @@
 # Changelog
 
+### 1.0.2 - 2022-09-14
+ - Specify README.md file type
+
 ### 1.0.1 - 2022-09-12
  - Update codeowners to public news engineering group
 
