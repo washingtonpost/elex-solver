@@ -1,5 +1,8 @@
 # Changelog
 
+### 1.0.3 - 2022-11-07
+ - Add gitignore, codeowners, PR template, unit test workflow
+
 ### 1.0.2 - 2022-09-14
  - Specify README.md file type
 
