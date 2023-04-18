@@ -62,7 +62,7 @@ class QuantileRegressionSolver:
         Sets up the optimization problem and solves it
         """
         self._check_matrix_condition(x)
-        coefficients = cp.Variable((x.shape[1], ))
+        coefficients = cp.Variable((x.shape[1],))
         loss_function = self.get_loss_function(x, y, coefficients, weights)
         loss_function += lambda_ * self.get_regularizer(coefficients)
         objective = cp.Minimize(loss_function)
@@ -70,7 +70,9 @@ class QuantileRegressionSolver:
         problem.solve(solver=self.solver, verbose=verbose, **self.KWARGS.get(self.solver, {}))
         return coefficients, problem
 
-    def fit(self, x, y, tau_value=0.5, weights=None, lambda_=0, verbose=False, save_problem=False, normalize_weights=True):
+    def fit(
+        self, x, y, tau_value=0.5, weights=None, lambda_=0, verbose=False, save_problem=False, normalize_weights=True
+    ):
         """
         Fit the (weighted) quantile regression problem.
         Weights should not sum to one.
