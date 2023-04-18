@@ -24,6 +24,12 @@ Set up a virtual environment and run:
 > pip install -r requirements-dev.txt 
 ```
 
+## Precommit
+To run pre-commit for linting, run:
+```
+pre-commit run --all-files
+```
+
 ## Testing
 ```
 > tox
