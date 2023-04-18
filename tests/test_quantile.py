@@ -233,6 +233,27 @@ def test_weight_normalization_same_fit(random_data_weights):
 
 
 ########################
+# Test regularization #
+########################
+
+
+def test_regularization(random_data_no_weights):
+    tau = 0.5
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values
+
+    quantreg = QuantileRegressionSolver()
+    lambda_ = 1e8
+    quantreg.fit(x, y, tau, lambda_=lambda_, save_problem=True)
+    coefficients_w_reg = quantreg.coefficients
+    assert all(np.abs(coefficients_w_reg - [0, 0, 0, 0, 0]) <= TOL)
+
+    objective_w_reg = quantreg.problem.value
+    quantreg.fit(x, y, tau, save_problem=True)
+    assert quantreg.problem.value < objective_w_reg
+
+
+########################
 # Test checking matrix #
 ########################
 

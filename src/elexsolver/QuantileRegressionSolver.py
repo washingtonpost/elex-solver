@@ -49,21 +49,30 @@ class QuantileRegressionSolver:
             return False
         return True
 
-    def __solve(self, x, y, weights, verbose):
+    def get_loss_function(self, x, y, coefficients, weights):
+        y_hat = x @ coefficients
+        residual = y - y_hat
+        return cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
+
+    def get_regularizer(self, coefficients):
+        return cp.pnorm(coefficients, p=2) ** 2
+
+    def __solve(self, x, y, weights, lambda_, verbose):
         """
         Sets up the optimization problem and solves it
         """
         self._check_matrix_condition(x)
         coefficients = cp.Variable((x.shape[1],))
-        y_hat = x @ coefficients
-        residual = y - y_hat
-        loss_function = cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
+        loss_function = self.get_loss_function(x, y, coefficients, weights)
+        loss_function += lambda_ * self.get_regularizer(coefficients)
         objective = cp.Minimize(loss_function)
         problem = cp.Problem(objective)
         problem.solve(solver=self.solver, verbose=verbose, **self.KWARGS.get(self.solver, {}))
         return coefficients, problem
 
-    def fit(self, x, y, tau_value=0.5, weights=None, verbose=False, save_problem=False, normalize_weights=True):
+    def fit(
+        self, x, y, tau_value=0.5, weights=None, lambda_=0, verbose=False, save_problem=False, normalize_weights=True
+    ):
         """
         Fit the (weighted) quantile regression problem.
         Weights should not sum to one.
@@ -78,7 +87,7 @@ class QuantileRegressionSolver:
             weights = weights / weights_sum
 
         self.tau.value = tau_value
-        coefficients, problem = self.__solve(x, y, weights, verbose)
+        coefficients, problem = self.__solve(x, y, weights, lambda_, verbose)
         self.coefficients = coefficients.value
         if save_problem:
             self.problem = problem
