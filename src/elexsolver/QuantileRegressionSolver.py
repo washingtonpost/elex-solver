@@ -45,7 +45,7 @@ class QuantileRegressionSolver:
                 f"Ill-conditioned matrix detected. Matrix condition number >= {self.CONDITION_ERROR_MIN}"
             )
         elif condition_number >= self.CONDITION_WARNING_MIN:
-            LOG.warn("Ill-conditioned matrix detected. result is not guaranteed to be accurate")
+            LOG.warning("Ill-conditioned matrix detected. result is not guaranteed to be accurate")
             return False
         return True
 
