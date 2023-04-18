@@ -9,25 +9,24 @@ initialize_logging()
 
 LOG = logging.getLogger(__name__)
 
+
 class QuantileRegressionSolverException(Exception):
     pass
+
 
 class IllConditionedMatrixException(QuantileRegressionSolverException):
     pass
 
-class QuantileRegressionSolver():
 
-    VALID_SOLVERS = {'SCS', 'ECOS', 'MOSEK', 'OSQP', 'CVXOPT', 'GLPK'}
-    KWARGS = {
-        "ECOS": {
-            "max_iters": 10000
-        }
-    }
+class QuantileRegressionSolver:
 
-    CONDITION_WARNING_MIN = 50 # arbitrary
-    CONDITION_ERROR_MIN = 1e+8 # based on scipy
+    VALID_SOLVERS = {"SCS", "ECOS", "MOSEK", "OSQP", "CVXOPT", "GLPK"}
+    KWARGS = {"ECOS": {"max_iters": 10000}}
 
-    def __init__(self, solver='ECOS'):
+    CONDITION_WARNING_MIN = 50  # arbitrary
+    CONDITION_ERROR_MIN = 1e8  # based on scipy
+
+    def __init__(self, solver="ECOS"):
         if solver not in self.VALID_SOLVERS:
             raise ValueError(f"solver must be in {self.VALID_SOLVERS}")
         self.tau = cp.Parameter()
@@ -46,7 +45,7 @@ class QuantileRegressionSolver():
                 f"Ill-conditioned matrix detected. Matrix condition number >= {self.CONDITION_ERROR_MIN}"
             )
         elif condition_number >= self.CONDITION_WARNING_MIN:
-            LOG.warn(f"Ill-conditioned matrix detected. result is not guaranteed to be accurate")
+            LOG.warn("Ill-conditioned matrix detected. result is not guaranteed to be accurate")
             return False
         return True
 
@@ -55,7 +54,7 @@ class QuantileRegressionSolver():
         Sets up the optimization problem and solves it
         """
         self._check_matrix_condition(x)
-        coefficients = cp.Variable((x.shape[1], ))
+        coefficients = cp.Variable((x.shape[1],))
         y_hat = x @ coefficients
         residual = y - y_hat
         loss_function = cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
@@ -69,7 +68,7 @@ class QuantileRegressionSolver():
         Fit the (weighted) quantile regression problem.
         Weights should not sum to one.
         """
-        if weights is None: # if weights are none, give unit weights
+        if weights is None:  # if weights are none, give unit weights
             weights = [1] * x.shape[0]
         if normalize_weights:
             weights_sum = np.sum(weights)
@@ -77,7 +76,7 @@ class QuantileRegressionSolver():
                 # This should not happen
                 raise ZeroDivisionError
             weights = weights / weights_sum
-        
+
         self.tau.value = tau_value
         coefficients, problem = self.__solve(x, y, weights, verbose)
         self.coefficients = coefficients.value
