@@ -1,6 +1,7 @@
 import cvxpy as cp
 
-class TransitionMatrixSolver():
+
+class TransitionMatrixSolver:
     def __init__(self):
         self.transition_matrix = None
 
@@ -12,7 +13,7 @@ class TransitionMatrixSolver():
 
     def __solve(self, A, B, strict):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]))
-        loss_function = cp.norm(A @ transition_matrix - B, 'fro')
+        loss_function = cp.norm(A @ transition_matrix - B, "fro")
         objective = cp.Minimize(loss_function)
         constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, strict)
         problem = cp.Problem(objective, constraint)
