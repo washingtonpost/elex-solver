@@ -78,12 +78,12 @@ class QuantileRegressionSolver:
         Weights should not sum to one.
         """
 
-        if  np.any(np.isnan(x)):
+        if np.any(np.isnan(x)):
             LOG.warning("Warning: NaN values in reporting_units_features")
 
-        if  np.any(np.isnan(y)):
+        if np.any(np.isnan(y)):
             LOG.warning("Warning: NaN values in reporting_units_residuals")
-        
+
         if weights is None:  # if weights are none, give unit weights
             weights = [1] * x.shape[0]
         if normalize_weights:
