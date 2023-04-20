@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-import warnings
 
 from elexsolver.QuantileRegressionSolver import IllConditionedMatrixException, QuantileRegressionSolver
 
@@ -291,6 +290,7 @@ def test_ill_conditioned_warning():
 # Test checking NaN/Inf #
 ########################
 
+
 def test_no_nan_inf_error(random_data_weights):
     quantreg = QuantileRegressionSolver()
     tau = 0.9
@@ -300,7 +300,7 @@ def test_no_nan_inf_error(random_data_weights):
     x[0, 0] = np.nan
     with pytest.raises(ValueError):
         quantreg.fit(x, y, tau)
-    
+
     x[0, 0] = np.inf
     with pytest.raises(ValueError):
         quantreg.fit(x, y, tau)
@@ -309,7 +309,7 @@ def test_no_nan_inf_error(random_data_weights):
     y[5] = np.nan
     with pytest.raises(ValueError):
         quantreg.fit(x, y, tau)
-    
+
     y[5] = np.inf
     with pytest.raises(ValueError):
         quantreg.fit(x, y, tau)
