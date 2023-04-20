@@ -49,6 +49,13 @@ class QuantileRegressionSolver:
             return False
         return True
 
+    def _check_any_element_nan_or_inf(self, x):
+        """
+        Check whether any element in a matrix or vector is NaN or infinity
+        """
+        if np.any(np.isnan(x)) or np.any(np.isinf(x)):
+            raise ValueError("Array contains NaN or Infinity")
+
     def get_loss_function(self, x, y, coefficients, weights):
         y_hat = x @ coefficients
         residual = y - y_hat
@@ -77,6 +84,10 @@ class QuantileRegressionSolver:
         Fit the (weighted) quantile regression problem.
         Weights should not sum to one.
         """
+
+        self._check_any_element_nan_or_inf(x)
+        self._check_any_element_nan_or_inf(y)
+
         if weights is None:  # if weights are none, give unit weights
             weights = [1] * x.shape[0]
         if normalize_weights:
@@ -98,4 +109,6 @@ class QuantileRegressionSolver:
         """
         Returns predictions
         """
+        self._check_any_element_nan_or_inf(x)
+
         return self.coefficients @ x.T

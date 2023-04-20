@@ -284,3 +284,41 @@ def test_ill_conditioned_warning():
     x = random_number_generator.multivariate_normal(mu, sigma, size=3)
     matrix_check = quantreg._check_matrix_condition(x)
     assert matrix_check
+
+
+########################
+# Test checking NaN/Inf #
+########################
+
+
+def test_no_nan_inf_error(random_data_weights):
+    quantreg = QuantileRegressionSolver()
+    tau = 0.9
+    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_weights["y"].values
+
+    x[0, 0] = np.nan
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    x[0, 0] = np.inf
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y[5] = np.nan
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    y[5] = np.inf
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    quantreg.coefficients = [4, 32, 4, 24, 7]
+    x = np.vstack([x, [4, 2, 6, np.nan, 3]])
+    with pytest.raises(ValueError):
+        quantreg.predict(x)
+
+    x = np.vstack([x, [4, 2, 6, np.inf, 3]])
+    with pytest.raises(ValueError):
+        quantreg.predict(x)
