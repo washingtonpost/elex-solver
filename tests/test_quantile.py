@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+import warnings
 
 from elexsolver.QuantileRegressionSolver import IllConditionedMatrixException, QuantileRegressionSolver
 
@@ -137,26 +138,6 @@ def test_random_upper_weights(random_data_weights):
     quantreg.fit(x, y, tau, weights=weights)
     quantreg.predict(x)
     assert all(np.abs(quantreg.coefficients - [3.47742, 2.07360, 4.51754, 4.15237, 9.58856]) <= TOL)
-
-
-def test_nan_warnings(random_data_weights):
-    quantreg = QuantileRegressionSolver()
-    tau = 0.9
-    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
-    y = random_data_weights["y"].values
-
-    with pytest.warns(None):
-        quantreg.fit(x, y, tau)
-
-    x = np.vstack([x, [4, 2, 6, 8, 3]])
-    y = np.append(y, np.nan)
-    with pytest.warns(UserWarning):
-        quantreg.fit(x, y, tau)
-
-    quantreg.coefficients = [4, 32, 4, 24, 7]
-    x = np.vstack([x, [4, 2, 6, np.nan, 3]])
-    # with pytest.warns(UserWarning):
-    #     quantreg.predict(np.vstack([x, [4,2,6,np.nan,3]]))
 
 
 ########################
@@ -304,3 +285,40 @@ def test_ill_conditioned_warning():
     x = random_number_generator.multivariate_normal(mu, sigma, size=3)
     matrix_check = quantreg._check_matrix_condition(x)
     assert matrix_check
+
+
+########################
+# Test checking NaN/Inf #
+########################
+
+def test_no_nan_inf_error(random_data_weights):
+    quantreg = QuantileRegressionSolver()
+    tau = 0.9
+    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_weights["y"].values
+
+    x[0, 0] = np.nan
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+    
+    x[0, 0] = np.inf
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y[5] = np.nan
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+    
+    y[5] = np.inf
+    with pytest.raises(ValueError):
+        quantreg.fit(x, y, tau)
+
+    quantreg.coefficients = [4, 32, 4, 24, 7]
+    x = np.vstack([x, [4, 2, 6, np.nan, 3]])
+    with pytest.raises(ValueError):
+        quantreg.predict(x)
+
+    x = np.vstack([x, [4, 2, 6, np.inf, 3]])
+    with pytest.raises(ValueError):
+        quantreg.predict(x)
