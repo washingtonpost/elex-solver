@@ -83,7 +83,16 @@ class QuantileRegressionSolver:
         return coefficients, problem
 
     def fit(
-        self, x, y, tau_value=0.5, weights=None, lambda_=0, fit_intercept=True, verbose=False, save_problem=False, normalize_weights=True
+        self,
+        x,
+        y,
+        tau_value=0.5,
+        weights=None,
+        lambda_=0,
+        fit_intercept=True,
+        verbose=False,
+        save_problem=False,
+        normalize_weights=True,
     ):
         """
         Fit the (weighted) quantile regression problem.
