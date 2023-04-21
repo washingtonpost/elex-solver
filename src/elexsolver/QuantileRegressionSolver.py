@@ -62,8 +62,8 @@ class QuantileRegressionSolver:
         return cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
 
     def get_regularizer(self, coefficients, fit_intercept):
-        # coefficient for intercept should not get regularized
-        # NOTE: this now assumes that the first column is an intercept
+        # if we are fitting an intercept in the model, then that coefficient should not be regularized.
+        # NOTE: assumes that if fit_intercept=True, that the intercept is in the first column
         coefficients_to_regularize = coefficients
         if fit_intercept:
             coefficients_to_regularize = coefficients[1:]
@@ -88,6 +88,7 @@ class QuantileRegressionSolver:
         """
         Fit the (weighted) quantile regression problem.
         Weights should not sum to one.
+        If fit_intercept=True then intercept is assumed to be the first column in `x`
         """
 
         self._check_any_element_nan_or_inf(x)
