@@ -61,24 +61,29 @@ class QuantileRegressionSolver:
         residual = y - y_hat
         return cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
 
-    def get_regularizer(self, coefficients):
-        return cp.pnorm(coefficients, p=2) ** 2
+    def get_regularizer(self, coefficients, fit_intercept):
+        # coefficient for intercept should not get regularized
+        # NOTE: this now assumes that the first column is an intercept
+        coefficients_to_regularize = coefficients
+        if fit_intercept:
+            coefficients_to_regularize = coefficients[1:]
+        return cp.pnorm(coefficients_to_regularize, p=2) ** 2
 
-    def __solve(self, x, y, weights, lambda_, verbose):
+    def __solve(self, x, y, weights, lambda_, fit_intercept, verbose):
         """
         Sets up the optimization problem and solves it
         """
         self._check_matrix_condition(x)
         coefficients = cp.Variable((x.shape[1],))
         loss_function = self.get_loss_function(x, y, coefficients, weights)
-        loss_function += lambda_ * self.get_regularizer(coefficients)
+        loss_function += lambda_ * self.get_regularizer(coefficients, fit_intercept)
         objective = cp.Minimize(loss_function)
         problem = cp.Problem(objective)
         problem.solve(solver=self.solver, verbose=verbose, **self.KWARGS.get(self.solver, {}))
         return coefficients, problem
 
     def fit(
-        self, x, y, tau_value=0.5, weights=None, lambda_=0, verbose=False, save_problem=False, normalize_weights=True
+        self, x, y, tau_value=0.5, weights=None, lambda_=0, fit_intercept=True, verbose=False, save_problem=False, normalize_weights=True
     ):
         """
         Fit the (weighted) quantile regression problem.
@@ -98,7 +103,7 @@ class QuantileRegressionSolver:
             weights = weights / weights_sum
 
         self.tau.value = tau_value
-        coefficients, problem = self.__solve(x, y, weights, lambda_, verbose)
+        coefficients, problem = self.__solve(x, y, weights, lambda_, fit_intercept, verbose)
         self.coefficients = coefficients.value
         if save_problem:
             self.problem = problem
