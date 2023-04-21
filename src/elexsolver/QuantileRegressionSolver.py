@@ -56,6 +56,9 @@ class QuantileRegressionSolver:
             raise ValueError("Array contains NaN or Infinity")
 
     def _check_intercept(self, x):
+        """
+        Check whether the first column is all 1s (normal intercept) otherwise raises a warning.
+        """
         if ~np.all(x[:, 0] == 1):
             warnings.warn("Warning: fit_intercept=True and not all elements of the first columns are 1s")
 
