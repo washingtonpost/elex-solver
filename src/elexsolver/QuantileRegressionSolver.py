@@ -63,11 +63,17 @@ class QuantileRegressionSolver:
             warnings.warn("Warning: fit_intercept=True and not all elements of the first columns are 1s")
 
     def get_loss_function(self, x, y, coefficients, weights):
+        """
+        Get the quantile regression loss function
+        """
         y_hat = x @ coefficients
         residual = y - y_hat
         return cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (self.tau.value - 0.5) * residual))
 
     def get_regularizer(self, coefficients, fit_intercept):
+        """
+        Get regularization component of the loss function. Note that this is L2 (ridge) regularization.
+        """
         # if we are fitting an intercept in the model, then that coefficient should not be regularized.
         # NOTE: assumes that if fit_intercept=True, that the intercept is in the first column
         coefficients_to_regularize = coefficients
