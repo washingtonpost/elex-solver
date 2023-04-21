@@ -7,3 +7,7 @@ betamax
 betamax-serializers
 pylint
 tox
+black
+isort
+pre-commit
+pytest
