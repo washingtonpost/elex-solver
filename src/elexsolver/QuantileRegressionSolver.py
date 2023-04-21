@@ -1,5 +1,5 @@
 import logging
-
+import warnings
 import cvxpy as cp
 import numpy as np
 
@@ -45,9 +45,7 @@ class QuantileRegressionSolver:
                 f"Ill-conditioned matrix detected. Matrix condition number >= {self.CONDITION_ERROR_MIN}"
             )
         elif condition_number >= self.CONDITION_WARNING_MIN:
-            LOG.warning("Ill-conditioned matrix detected. result is not guaranteed to be accurate")
-            return False
-        return True
+            warnings.warn("Warning: Ill-conditioned matrix detected. result is not guaranteed to be accurate")
 
     def _check_any_element_nan_or_inf(self, x):
         """
@@ -55,6 +53,10 @@ class QuantileRegressionSolver:
         """
         if np.any(np.isnan(x)) or np.any(np.isinf(x)):
             raise ValueError("Array contains NaN or Infinity")
+
+    def _check_intercept(self, x):
+        if ~np.all(x[:,0] == 1):
+            warnings.warn("Warning: fit_intercept=True and not all elements of the first columns are 1s")
 
     def get_loss_function(self, x, y, coefficients, weights):
         y_hat = x @ coefficients
@@ -102,6 +104,9 @@ class QuantileRegressionSolver:
 
         self._check_any_element_nan_or_inf(x)
         self._check_any_element_nan_or_inf(y)
+
+        if fit_intercept:
+            self._check_intercept(x)
 
         if weights is None:  # if weights are none, give unit weights
             weights = [1] * x.shape[0]

@@ -31,4 +31,5 @@ def initialize_logging(logging_config=None):
         app_log_level = os.getenv("APP_LOG_LEVEL", "INFO")
         LOGGING_CONFIG["loggers"]["elexsolver"]["level"] = app_log_level
         logging_config = LOGGING_CONFIG
+    logging.captureWarnings(True)
     logging.config.dictConfig(logging_config)
