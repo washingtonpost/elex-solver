@@ -1,5 +1,12 @@
 # Changelog
 
+### 1.1.0 - 2023-04-21
+- fix: Not regularizing intercept coefficient + better warning handling [#8](https://github.com/washingtonpost/elex-solver/pull/8)
+- feat: Throw error when encountering NaN/Inf [#7](https://github.com/washingtonpost/elex-solver/pull/7)
+- fix: fix deprecated warning [#6](https://github.com/washingtonpost/elex-solver/pull/6)
+- chore: Add pre-commit linting and hook [#5](https://github.com/washingtonpost/elex-solver/pull/5)
+- feat: Add regularization [#4](https://github.com/washingtonpost/elex-solver/pull/4)
+
 ### 1.0.3 - 2022-11-07
  - Add gitignore, codeowners, PR template, unit test workflow
 
