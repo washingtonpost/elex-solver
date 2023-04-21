@@ -240,7 +240,7 @@ def test_weight_normalization_same_fit(random_data_weights):
 def test_regularization_with_intercept(random_data_no_weights):
     tau = 0.5
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
-    x[:,0] = 1
+    x[:, 0] = 1
     y = random_data_no_weights["y"].values
 
     quantreg = QuantileRegressionSolver()
@@ -254,6 +254,7 @@ def test_regularization_with_intercept(random_data_no_weights):
     quantreg.fit(x, y, tau, save_problem=True)
     assert quantreg.problem.value < objective_w_reg
 
+
 def test_regularization_with_intercept_warning(random_data_no_weights, caplog):
     caplog.clear()
     tau = 0.5
@@ -262,8 +263,9 @@ def test_regularization_with_intercept_warning(random_data_no_weights, caplog):
 
     quantreg = QuantileRegressionSolver()
     lambda_ = 1e6
-    with pytest.warns(UserWarning):    
+    with pytest.warns(UserWarning):
         quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=True, save_problem=True)
+
 
 def test_regularization_without_intercept(random_data_no_weights):
     tau = 0.5
@@ -298,7 +300,7 @@ def test_ill_conditioned_warning():
     sigma = np.asarray([[1, 0.9, 0], [0.9, 1, 0], [0, 0, 1]])
     x = random_number_generator.multivariate_normal(mu, sigma, size=3)
     with pytest.warns(UserWarning):
-        matrix_check = quantreg._check_matrix_condition(x)
+        quantreg._check_matrix_condition(x)
 
 
 ########################

@@ -1,5 +1,6 @@
 import logging
 import warnings
+
 import cvxpy as cp
 import numpy as np
 
@@ -55,7 +56,7 @@ class QuantileRegressionSolver:
             raise ValueError("Array contains NaN or Infinity")
 
     def _check_intercept(self, x):
-        if ~np.all(x[:,0] == 1):
+        if ~np.all(x[:, 0] == 1):
             warnings.warn("Warning: fit_intercept=True and not all elements of the first columns are 1s")
 
     def get_loss_function(self, x, y, coefficients, weights):
