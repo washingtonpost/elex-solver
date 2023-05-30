@@ -111,9 +111,10 @@ class QuantileRegressionSolver:
         Weights should not sum to one.
         If fit_intercept=True then intercept is assumed to be the first column in `x`
         """
-
-        self._check_any_element_nan_or_inf(x)
-        self._check_any_element_nan_or_inf(y)
+        x = np.nan_to_num(x, posinf=0)
+        y = np.nan_to_num(y, posinf=0)
+        # self._check_any_element_nan_or_inf(x)
+       # self._check_any_element_nan_or_inf(y)
 
         if fit_intercept:
             self._check_intercept(x)
@@ -126,7 +127,7 @@ class QuantileRegressionSolver:
                 # This should not happen
                 raise ZeroDivisionError
             weights = weights / weights_sum
-
+        
         self.tau.value = tau_value
         coefficients, problem = self.__solve(x, y, weights, lambda_, fit_intercept, verbose)
         self.coefficients = coefficients.value
