@@ -27,7 +27,7 @@ class OLSRegressionSolver(LinearSovler):
     def __init__(self):
         super().__init__()
         self.normal_eqs = None
-        self.hat_matrix = None
+        self.hat_vals = None
 
     def _get_regularizer(self, lambda_: float, dim: int, fit_intercept: bool, n_feat_ignore_req: int) -> np.ndarray:
         """
