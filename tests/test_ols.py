@@ -120,6 +120,20 @@ def test_random_weights_intercept(random_data_weights):
 # Test regularization #
 ########################
 
+def test_regularizer():
+    lm = OLSRegressionSolver()
+
+    lambda_I = lm._get_regularizer(7, 10, fit_intercept=True, n_feat_ignore_req=2)
+
+    assert lambda_I.shape == (10, 10)
+    assert lambda_I[0, 0] == pytest.approx(0)
+    assert lambda_I[1, 1] == pytest.approx(0)
+    assert lambda_I[2, 2] == pytest.approx(0)
+    assert lambda_I[3, 3] == pytest.approx(7)
+    assert lambda_I[4, 4] == pytest.approx(7)
+    assert lambda_I[5, 5] == pytest.approx(7)
+    assert lambda_I[6, 6] == pytest.approx(7)
+    assert lambda_I[7, 7] == pytest.approx(7)
 
 def test_regularization_with_intercept(random_data_no_weights):
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
@@ -151,6 +165,69 @@ def test_regularization_with_intercept_and_unreg_feature(random_data_no_weights)
 # Test residuals #
 ##################
 
+def test_residuals_no_weights(random_data_no_weights):
+    lm = OLSRegressionSolver()
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values.reshape(-1, 1)
+    lm.fit(x, y, fit_intercept=False)
+    predictions = lm.predict(x)
+
+    residuals = lm.residuals(y, predictions, loo=False, center=False)
+
+    assert residuals[0] == pytest.approx(0.885973530)
+    assert residuals[-1] == pytest.approx(0.841996302)
+    
+    residuals = lm.residuals(y, predictions, loo=True, center=False)
+
+    assert residuals[0] == pytest.approx(0.920112164)
+    assert residuals[-1] == pytest.approx(0.875896477)
+
+    residuals = lm.residuals(y, predictions, loo=True, center=True)
+    assert np.sum(residuals) == pytest.approx(0)
+
+def test_residuals_weights(random_data_weights):
+    lm = OLSRegressionSolver()
+    x = random_data_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_weights["y"].values.reshape(-1, 1)
+    weights = random_data_weights["weights"].values
+
+    lm.fit(x, y, weights=weights, fit_intercept=False)
+    predictions = lm.predict(x)
+
+    residuals = lm.residuals(y, predictions, loo=False, center=False)
+
+    assert residuals[0] == pytest.approx(-1.971798590 )
+    assert residuals[-1] == pytest.approx(-1.373951578)
+
+    residuals = lm.residuals(y, predictions, loo=True, center=False)
+
+    assert residuals[0] == pytest.approx(-1.999718445)
+    assert residuals[-1] == pytest.approx(-1.438563033)
+
+    residuals = lm.residuals(y, predictions, loo=True, center=True)
+    assert np.sum(residuals) == pytest.approx(0)
+
 ################################
 # Test saving normal equations #
 ################################
+
+def test_saving_normal_equations(random_data_no_weights):
+    lm = OLSRegressionSolver()
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values.reshape(-1, 1)
+    lm.fit(x, y, fit_intercept=False)
+
+    normal_equations = lm.normal_eqs
+
+    # passing normal equations so should stay the same
+    x_new = np.ones_like(x)
+    y_new = np.zeros_like(y)
+    lm.fit(x_new, y_new, normal_eqs=normal_equations)
+    np.testing.assert_array_equal(lm.normal_eqs, normal_equations)
+
+    # not passing normal equations so should now change
+    x_new = random_data_no_weights[["x0", "x1"]].values
+    y_new = np.zeros_like(y)
+    lm.fit(x_new, y_new, fit_intercept=False)
+    with np.testing.assert_raises(AssertionError):
+        np.testing.assert_array_equal(lm.normal_eqs, normal_equations)
