@@ -17,7 +17,7 @@ class LinearSolverException(Exception):
 class IllConditionedMatrixException(LinearSolverException):
     pass
 
-class LinearSovler(ABC):
+class LinearSolver(ABC):
     """
     An abstract base class for a linear solver
     """

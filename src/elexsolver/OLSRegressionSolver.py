@@ -9,7 +9,7 @@ initialize_logging()
 
 LOG = logging.getLogger(__name__)
 
-class OLSRegressionSolver(LinearSovler):
+class OLSRegressionSolver(LinearSolver):
     """
     A class for Ordinary Least Squares Regression optimized for the bootstrap
     """
