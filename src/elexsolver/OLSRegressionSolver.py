@@ -2,7 +2,7 @@ import logging
 
 import numpy as np
 
-from elexsolver.LinearSolver import LinearSovler
+from elexsolver.LinearSolver import LinearSolver
 from elexsolver.logging import initialize_logging
 
 initialize_logging()
