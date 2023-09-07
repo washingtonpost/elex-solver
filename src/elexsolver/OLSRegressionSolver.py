@@ -29,7 +29,7 @@ class OLSRegressionSolver(LinearSolver):
         self.normal_eqs = None
         self.hat_vals = None
 
-    def _get_regularizer(self, lambda_: float, dim: int, fit_intercept: bool, n_feat_ignore_req: int) -> np.ndarray:
+    def _get_regularizer(self, lambda_: float, dim: int, fit_intercept: bool, regularize_intercept: bool, n_feat_ignore_req: int) -> np.ndarray:
         """
         Returns the regularization matrix
         """
@@ -43,11 +43,14 @@ class OLSRegressionSolver(LinearSolver):
         # so set regularization constant to zero for intercept
         # and the first n_feat_ignore_req features
         for i in range(fit_intercept + n_feat_ignore_req):
+            # if we are fitting an intercept and want to regularize intercept then we don't want
+            # to set the regularization matrix at lambda_I[0, 0] to zero
+            if fit_intercept and i == 0 and regularize_intercept: continue
             lambda_I[i, i] = 0
         
         return lambda_I
     
-    def _compute_normal_equations(self, x: np.ndarray, L: np.ndarray, lambda_: float, fit_intercept: bool, n_feat_ignore_req: int) -> np.ndarray:
+    def _compute_normal_equations(self, x: np.ndarray, L: np.ndarray, lambda_: float, fit_intercept: bool, regularize_intercept: bool, n_feat_ignore_req: int) -> np.ndarray:
         """
         Computes the normal equations for OLS: (X^T X)^{-1} X^T
         """
@@ -57,7 +60,7 @@ class OLSRegressionSolver(LinearSolver):
         Q, R = np.linalg.qr(L @ x)
 
         # get regularization matrix
-        lambda_I = self._get_regularizer(lambda_, R.shape[0], fit_intercept, n_feat_ignore_req)
+        lambda_I = self._get_regularizer(lambda_, R.shape[0], fit_intercept, regularize_intercept, n_feat_ignore_req)
 
         # substitute X = QR into the normal equations to get
         #       R^T Q^T Q R \beta = R^T Q^T y
@@ -67,7 +70,7 @@ class OLSRegressionSolver(LinearSolver):
         # lambda_I is the regularization matrix
         return np.linalg.inv(R.T @ R + lambda_I) @ R.T @ Q.T
 
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, lambda_: float=0.0, normal_eqs: np.ndarray | None = None, fit_intercept: bool = True, n_feat_ignore_req: int = 0):
+    def fit(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, lambda_: float=0.0, normal_eqs: np.ndarray | None = None, fit_intercept: bool = True, regularize_intercept: bool = False, n_feat_ignore_req: int = 0):
         self._check_any_element_nan_or_inf(x)
         self._check_any_element_nan_or_inf(y)
         
@@ -86,7 +89,7 @@ class OLSRegressionSolver(LinearSolver):
         # in the bootstrap setting we can now pass in the normal equations and can
         # save time re-computing them
         if normal_eqs is None:
-            self.normal_eqs = self._compute_normal_equations(x, L, lambda_, fit_intercept, n_feat_ignore_req)
+            self.normal_eqs = self._compute_normal_equations(x, L, lambda_, fit_intercept, regularize_intercept, n_feat_ignore_req)
         else:
             self.normal_eqs = normal_eqs
 

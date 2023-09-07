@@ -123,7 +123,19 @@ def test_random_weights_intercept(random_data_weights):
 def test_regularizer():
     lm = OLSRegressionSolver()
 
-    lambda_I = lm._get_regularizer(7, 10, fit_intercept=True, n_feat_ignore_req=2)
+    lambda_I = lm._get_regularizer(7, 10, fit_intercept=True, regularize_intercept=True, n_feat_ignore_req=2)
+
+    assert lambda_I.shape == (10, 10)
+    assert lambda_I[0, 0] == pytest.approx(7)
+    assert lambda_I[1, 1] == pytest.approx(0)
+    assert lambda_I[2, 2] == pytest.approx(0)
+    assert lambda_I[3, 3] == pytest.approx(7)
+    assert lambda_I[4, 4] == pytest.approx(7)
+    assert lambda_I[5, 5] == pytest.approx(7)
+    assert lambda_I[6, 6] == pytest.approx(7)
+    assert lambda_I[7, 7] == pytest.approx(7)
+    
+    lambda_I = lm._get_regularizer(7, 10, fit_intercept=True, regularize_intercept=False, n_feat_ignore_req=2)
 
     assert lambda_I.shape == (10, 10)
     assert lambda_I[0, 0] == pytest.approx(0)
@@ -142,7 +154,7 @@ def test_regularization_with_intercept(random_data_no_weights):
 
     lm = OLSRegressionSolver()
     lambda_ = 1e6
-    lm.fit(x, y, lambda_=lambda_, fit_intercept=True)
+    lm.fit(x, y, lambda_=lambda_, fit_intercept=True, regularize_intercept=False)
     coefficients_w_reg = lm.coefficients
     assert all(np.abs(coefficients_w_reg[1:] - [0, 0, 0, 0]) <= TOL)
     assert np.abs(coefficients_w_reg[0]) > TOL
@@ -154,10 +166,24 @@ def test_regularization_with_intercept_and_unreg_feature(random_data_no_weights)
 
     lm = OLSRegressionSolver()
     lambda_ = 1e6
-    lm.fit(x, y, lambda_=lambda_, fit_intercept=True, n_feat_ignore_req=2)
+    lm.fit(x, y, lambda_=lambda_, fit_intercept=True, regularize_intercept=False, n_feat_ignore_req=2)
     coefficients_w_reg = lm.coefficients
     assert all(np.abs(coefficients_w_reg[3:] - [0, 0]) <= TOL)
     assert np.abs(coefficients_w_reg[0]) > TOL
+    assert np.abs(coefficients_w_reg[1]) > TOL
+    assert np.abs(coefficients_w_reg[2]) > TOL
+
+def test_regularization_with_intercept_but_no_intercept_reg_and_unreg_feature(random_data_no_weights):
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    x[:, 0] = 1
+    y = random_data_no_weights["y"].values
+
+    lm = OLSRegressionSolver()
+    lambda_ = 1e6
+    lm.fit(x, y, lambda_=lambda_, fit_intercept=True, regularize_intercept=True, n_feat_ignore_req=2)
+    coefficients_w_reg = lm.coefficients
+    assert all(np.abs(coefficients_w_reg[3:] - [0, 0]) <= TOL)
+    assert np.abs(coefficients_w_reg[0]) < TOL
     assert np.abs(coefficients_w_reg[1]) > TOL
     assert np.abs(coefficients_w_reg[2]) > TOL
 
