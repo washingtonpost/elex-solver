@@ -39,6 +39,8 @@ class LinearSolver(ABC):
         """
         Use coefficients to predict
         """
+        self._check_any_element_nan_or_inf(x)
+
         return x @ self.coefficients
     
     def get_coefficients(self) -> np.ndarray: 
