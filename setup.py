@@ -3,7 +3,7 @@ from codecs import open
 
 from setuptools import find_packages, setup
 
-INSTALL_REQUIRES = "cvxpy<=1.2.0"
+INSTALL_REQUIRES = ["cvxpy<=1.2.0", "scipy<1.11.0"]
 
 THIS_FILE_DIR = os.path.dirname(__file__)
 
