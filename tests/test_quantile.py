@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 
 from elexsolver.QuantileRegressionSolver import QuantileRegressionSolver
+from elexsolver.LinearSolver import IllConditionedMatrixException
 
 # relatively high tolerance, since different implementation.
 TOL = 1e-3
@@ -89,6 +90,22 @@ def test_random_upper(random_data_no_weights):
     np.testing.assert_allclose(quantreg.coefficients, [[1.85617, 6.81286, 6.05586, 5.51965, 4.19864]], rtol=TOL)
 
 
+#################
+# Test multiple #
+#################
+
+def test_multiple(random_data_no_weights):
+    quantreg = QuantileRegressionSolver()
+    taus = [0.1, 0.5, 0.9]
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values
+    quantreg.fit(x, y, taus, fit_intercept=False)
+    quantreg.predict(x)
+    assert len(quantreg.coefficients) == 3
+    np.testing.assert_allclose(quantreg.coefficients[0], [0.17759, 6.99588, 4.18896, 4.83906, 3.22546], rtol=TOL)
+    np.testing.assert_allclose(quantreg.coefficients[1], [1.57699, 6.74906, 4.40175, 4.85346, 4.51814], rtol=TOL)
+    np.testing.assert_allclose(quantreg.coefficients[2], [1.85617, 6.81286, 6.05586, 5.51965, 4.19864], rtol=TOL)
+
 ######################
 # Tests with weights #
 ######################
@@ -143,6 +160,17 @@ def test_random_upper_weights(random_data_weights):
 ########################
 
 
+def test_regularization_without_intercept(random_data_no_weights):
+    tau = 0.5
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values
+
+    quantreg = QuantileRegressionSolver()
+    lambda_ = 1e6
+    quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=False, regularize_intercept=True)
+    np.testing.assert_allclose(quantreg.coefficients, [[0, 0, 0, 0, 0]], atol=TOL) # using absolute tolerance since comparing to zero
+
+
 def test_regularization_with_intercept(random_data_no_weights):
     tau = 0.5
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
@@ -151,39 +179,26 @@ def test_regularization_with_intercept(random_data_no_weights):
 
     quantreg = QuantileRegressionSolver()
     lambda_ = 1e6
-    quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=True)
+    quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=True, regularize_intercept=False)
     coefficients_w_reg = quantreg.coefficients
-
-    assert all(np.abs(coefficients_w_reg[1:] - [0, 0, 0, 0]) <= TOL)
-    assert np.abs(coefficients_w_reg[0]) > TOL
-
-    objective_w_reg = quantreg.problem.value
-    quantreg.fit(x, y, tau, save_problem=True)
-    assert quantreg.problem.value < objective_w_reg
+    np.testing.assert_allclose(quantreg.coefficients[0][1:], [0, 0, 0, 0], atol=TOL)
+    assert np.abs(coefficients_w_reg[0][0]) > TOL
 
 
-def test_regularization_with_intercept_warning(random_data_no_weights, caplog):
-    caplog.clear()
+def test_regularization_with_intercept_and_features(random_data_no_weights):
     tau = 0.5
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    x[:, 0] = 1
     y = random_data_no_weights["y"].values
 
     quantreg = QuantileRegressionSolver()
     lambda_ = 1e6
-    with pytest.warns(UserWarning):
-        quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=True)
-
-
-def test_regularization_without_intercept(random_data_no_weights):
-    tau = 0.5
-    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
-    y = random_data_no_weights["y"].values
-
-    quantreg = QuantileRegressionSolver()
-    lambda_ = 1e6
-    quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=False)
+    quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=True, regularize_intercept=False, n_feat_ignore_reg=2)
     coefficients_w_reg = quantreg.coefficients
-    assert all(np.abs(coefficients_w_reg - [0, 0, 0, 0, 0]) <= TOL)
+    np.testing.assert_allclose(quantreg.coefficients[0][3:], [0, 0], atol=TOL)
+    assert np.abs(coefficients_w_reg[0][0]) > TOL
+    assert np.abs(coefficients_w_reg[0][1]) > TOL
+    assert np.abs(coefficients_w_reg[0][2]) > TOL
 
 
 ########################

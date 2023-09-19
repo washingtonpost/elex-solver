@@ -37,54 +37,34 @@ class QuantileRegressionSolver(LinearSolver):
         # marginal are the dual values, since we are solving the dual this is equivalent to the primal
         return -1 * res.eqlin.marginals
 
-    def _fit_with_regularization(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray, tau: float, lambda_: float):
-        S = cp.Constant(y.reshape(-1, 1))
-        N = y.shape[0]
-        Phi = cp.Constant(x)
-        radius = 1 / lambda_
-        gamma = cp.Variable()
-        C = radius / (N + 1)
-        eta = cp.Variable(name="weights", shape=N)
-        constraints = [
-            C * (tau - 1) <= eta,
-            C * tau >= eta,
-            eta.T @ Phi == gamma
-        ]
-        prob = cp.Problem(
-            cp.Minimize(0.5 * cp.sum_squares(Phi.T @ eta) - cp.sum(cp.multiply(eta, cp.vec(S)))),
-            constraints
-        )
-        prob.solve()
-
-        return prob.constraints[-1].dual_value
+    def _get_regularizer(self, coefficients: cp.expressions.variable.Variable, regularize_intercept: bool, n_feat_ignore_reg: int) -> cp.atoms.norm: 
         """
-    S -> scores
-    tau -> quantile
-    eta -> optimization_variables
+        Get regularization component of the loss function. Note that this is L2 (ridge) regularization.
+        """
+        # this assumes that if regularize_intercept=True that the intercept is the first column
+        coefficients_to_regularize = coefficients[n_feat_ignore_reg: ]
+        if not regularize_intercept:
+            coefficients_to_regularize = coefficients[1 + n_feat_ignore_reg: ]
+        return cp.pnorm(coefficients_to_regularize, p=2) ** 2
 
-        eta = cp.Variable(name="weights", shape=n_calib)
-        
-        scores = cp.Constant(scores_calib.reshape(-1,1))
-    
-        Phi = cp.Constant(phi_calib)
+    def _fit_with_regularization(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray, tau: float, lambda_: float, regularize_intercept: bool, n_feat_ignore_reg: int):
+        """
+        Fits quantile regression with regularization
+        TODO: convert this problem to use the dual like in the non regularization case
+        """
+        arguments = {"ECOS": {"max_iters": 10000}}
+        coefficients = cp.Variable((x.shape[1], ))
+        y_hat = x @ coefficients
+        residual = y - y_hat
+        loss_function = cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (tau - 0.5) * residual))
+        loss_function += lambda_ * self._get_regularizer(coefficients, regularize_intercept, n_feat_ignore_reg)
+        objective = cp.Minimize(loss_function)
+        problem = cp.Problem(objective)
+        problem.solve(solver='ECOS', **arguments.get('ECOS', {}))
+        return coefficients.value
 
-            radius = 1 / infinite_params.get('lambda', FUNCTION_DEFAULTS['lambda'])
-    
-        C = radius / (n_calib + 1)
 
-        constraints = [
-            C * (quantile - 1) <= eta,
-            C * quantile >= eta,
-            eta.T @ Phi == 0]
-        prob = cp.Problem(
-                    cp.Minimize(0.5 * cp.sum_squares(eta) - cp.sum(cp.multiply(eta, cp.vec(scores)))),
-                    constraints
-                )
-    
-        coefficients = prob.constraints[-1].dual_value
-    """
-
-    def fit(self, x: np.ndarray, y: np.ndarray, taus: list | float = 0.5, weights: np.ndarray | None = None, lambda_: float = 0.0, fit_intercept: bool = True) -> np.ndarray:
+    def fit(self, x: np.ndarray, y: np.ndarray, taus: list | float = 0.5, weights: np.ndarray | None = None, lambda_: float = 0.0, fit_intercept: bool = True, regularize_intercept: bool = False, n_feat_ignore_reg: int = 0) -> np.ndarray:
         """
         Fits quantile regression
         """
@@ -107,7 +87,7 @@ class QuantileRegressionSolver(LinearSolver):
 
         for tau in taus:
             if lambda_ > 0:
-                coefficients = self._fit_with_regularization(x, y, weights, tau, lambda_)
+                coefficients = self._fit_with_regularization(x, y, weights, tau, lambda_, regularize_intercept, n_feat_ignore_reg)
             else:
                 coefficients = self._fit(x, y, weights, tau)
             self.coefficients.append(coefficients)
