@@ -83,7 +83,7 @@ class QuantileRegressionSolver(LinearSolver):
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
-    ) -> np.ndarray:
+    ):
         """
         Fits quantile regression
         """
