@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from elexsolver.QuantileRegressionSolver import QuantileRegressionSolver
 from elexsolver.LinearSolver import IllConditionedMatrixException
+from elexsolver.QuantileRegressionSolver import QuantileRegressionSolver
 
 # relatively high tolerance, since different implementation.
 TOL = 1e-3
@@ -70,6 +70,7 @@ def test_random_median(random_data_no_weights):
     quantreg.predict(x)
     np.testing.assert_allclose(quantreg.coefficients, [[1.57699, 6.74906, 4.40175, 4.85346, 4.51814]], rtol=TOL)
 
+
 def test_random_lower(random_data_no_weights):
     quantreg = QuantileRegressionSolver()
     tau = 0.1
@@ -94,6 +95,7 @@ def test_random_upper(random_data_no_weights):
 # Test multiple #
 #################
 
+
 def test_multiple(random_data_no_weights):
     quantreg = QuantileRegressionSolver()
     taus = [0.1, 0.5, 0.9]
@@ -105,6 +107,7 @@ def test_multiple(random_data_no_weights):
     np.testing.assert_allclose(quantreg.coefficients[0], [0.17759, 6.99588, 4.18896, 4.83906, 3.22546], rtol=TOL)
     np.testing.assert_allclose(quantreg.coefficients[1], [1.57699, 6.74906, 4.40175, 4.85346, 4.51814], rtol=TOL)
     np.testing.assert_allclose(quantreg.coefficients[2], [1.85617, 6.81286, 6.05586, 5.51965, 4.19864], rtol=TOL)
+
 
 ######################
 # Tests with weights #
@@ -168,7 +171,9 @@ def test_regularization_without_intercept(random_data_no_weights):
     quantreg = QuantileRegressionSolver()
     lambda_ = 1e6
     quantreg.fit(x, y, tau, lambda_=lambda_, fit_intercept=False, regularize_intercept=True)
-    np.testing.assert_allclose(quantreg.coefficients, [[0, 0, 0, 0, 0]], atol=TOL) # using absolute tolerance since comparing to zero
+    np.testing.assert_allclose(
+        quantreg.coefficients, [[0, 0, 0, 0, 0]], atol=TOL
+    )  # using absolute tolerance since comparing to zero
 
 
 def test_regularization_with_intercept(random_data_no_weights):

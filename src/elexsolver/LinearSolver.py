@@ -1,6 +1,6 @@
-from abc import ABC
 import logging
 import warnings
+from abc import ABC
 
 import numpy as np
 
@@ -10,12 +10,14 @@ initialize_logging()
 
 LOG = logging.getLogger(__name__)
 
+
 class LinearSolverException(Exception):
     pass
 
 
 class IllConditionedMatrixException(LinearSolverException):
     pass
+
 
 class LinearSolver(ABC):
     """
@@ -34,7 +36,7 @@ class LinearSolver(ABC):
         Fits model
         """
         raise NotImplementedError
-    
+
     def predict(self, x: np.ndarray) -> np.ndarray:
         """
         Use coefficients to predict
@@ -42,13 +44,13 @@ class LinearSolver(ABC):
         self._check_any_element_nan_or_inf(x)
 
         return x @ self.coefficients
-    
-    def get_coefficients(self) -> np.ndarray: 
+
+    def get_coefficients(self) -> np.ndarray:
         """
         Returns model coefficients
         """
         return self.coefficients
-    
+
     def _check_matrix_condition(self, x):
         """
         Check condition number of the design matrix as a check for multicolinearity.
