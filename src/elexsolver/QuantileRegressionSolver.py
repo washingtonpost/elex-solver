@@ -41,6 +41,8 @@ class QuantileRegressionSolver(LinearSolver):
         Get regularization component of the loss function. Note that this is L2 (ridge) regularization.
         """
         # this assumes that if regularize_intercept=True that the intercept is the first column
+        # also note that even if regularize_intercept is True BUT n_feat_ignore_req > 0 and fit_intercept
+        # is true that we are NOT regularizing the intercept
         coefficients_to_regularize = coefficients[n_feat_ignore_reg:]
         if not regularize_intercept:
             coefficients_to_regularize = coefficients[1 + n_feat_ignore_reg :]  # noqa: E203
