@@ -158,6 +158,45 @@ def test_random_upper_weights(random_data_weights):
     np.testing.assert_allclose(quantreg.coefficients, [[3.47742, 2.07360, 4.51754, 4.15237, 9.58856]], rtol=TOL)
 
 
+#############################
+# Test weight normalization #
+#############################
+
+
+def test_weight_normalization_divide_by_zero(random_data_no_weights):
+    tau = 0.5
+    x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
+    y = random_data_no_weights["y"].values
+    weights = np.asarray([0] * x.shape[0])  # all zero weights
+
+    quantreg = QuantileRegressionSolver()
+
+    # Will succeed without weight normalization
+    quantreg.fit(x, y, tau, normalize_weights=False, weights=weights, fit_intercept=False)
+
+    # Will fail with weight normalization
+    with pytest.raises(ZeroDivisionError):
+        quantreg.fit(x, y, tau, normalize_weights=True, weights=weights, fit_intercept=False)
+
+
+def test_weight_normalization_same_fit(random_data_weights):
+    tau = 0.5
+    x = np.asarray([[1, 1], [1, 1], [1, 1], [1, 2]])
+    y = np.asarray([3, 8, 9, 15])
+    weights = np.asarray([1, 1, 100, 3])
+
+    # Test predictions are right when normalize_weights is True and False
+    quantreg = QuantileRegressionSolver()
+    quantreg.fit(x, y, tau, weights, normalize_weights=True)
+    preds = quantreg.predict(x)
+    np.testing.assert_allclose(preds, [[9, 9, 9, 15]], rtol=TOL)
+
+    quantreg = QuantileRegressionSolver()
+    quantreg.fit(x, y, tau, weights, normalize_weights=False)
+    preds = quantreg.predict(x)
+    np.testing.assert_allclose(preds, [[9, 9, 9, 15]], rtol=TOL)
+
+
 ########################
 # Test regularization #
 ########################

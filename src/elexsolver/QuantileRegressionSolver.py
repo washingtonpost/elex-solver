@@ -83,6 +83,7 @@ class QuantileRegressionSolver(LinearSolver):
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
+        normalize_weights: bool = True,
     ):
         """
         Fits quantile regression
@@ -97,8 +98,12 @@ class QuantileRegressionSolver(LinearSolver):
         if weights is None:
             weights = np.ones((y.shape[0],))
 
-        # normalize weights
-        weights = weights / np.sum(weights)
+        # normalize weights. default to true
+        if normalize_weights:
+            weights_sum = np.sum(weights)
+            if weights_sum == 0:
+                raise ZeroDivisionError
+            weights = weights / weights_sum
 
         # _fit assumes that taus is list, so if we want to do one value of tau then turn into a list
         if isinstance(taus, float):
