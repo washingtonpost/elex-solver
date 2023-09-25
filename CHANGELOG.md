@@ -1,4 +1,6 @@
 # Changelog
+### 2.0.0 - 2023-09-22
+- feat: adding ordinary least squares regression solver. Updating quantile regression to solve dual [#11](https://github.com/washingtonpost/elex-solver/pull/11)
 
 ### 1.1.0 - 2023-04-21
 - fix: Not regularizing intercept coefficient + better warning handling [#8](https://github.com/washingtonpost/elex-solver/pull/8)
