@@ -1,5 +1,4 @@
 import logging
-import warnings
 from abc import ABC
 
 import numpy as np
@@ -26,7 +25,7 @@ class TransitionSolver(ABC):
         output = np.sum(A, axis=0)
         # rescaling in case any columns had been dropped previously
         return output / sum(output)
-    
+
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """
         Check whether any element in a matrix or vector is NaN or infinity
