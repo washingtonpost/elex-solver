@@ -1,28 +1,53 @@
+import logging
+
 import cvxpy as cp
+import numpy as np
+
+from elexsolver.logging import initialize_logging
+from elexsolver.TransitionSolver import TransitionSolver
+
+initialize_logging()
+
+LOG = logging.getLogger(__name__)
 
 
-class TransitionMatrixSolver:
-    def __init__(self):
-        self.transition_matrix = None
+class TransitionMatrixSolver(TransitionSolver):
+    def __init__(self, strict=True):
+        super().__init__()
+        self._transition_matrix = None
+        self._strict = strict
 
     @staticmethod
-    def __get_constraint(X, strict):
+    def __get_constraint(coef, strict):
         if strict:
-            return [cp.sum(X, axis=1) == 1]
-        return [cp.sum(X, axis=1) <= 1.1, cp.sum(X, axis=1) >= 0.9]
+            return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
+        return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
-    def __solve(self, A, B, strict):
+    def __solve(self, A, B):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]))
-        loss_function = cp.norm(A @ transition_matrix - B, "fro")
+        loss_function = cp.norm(A.values @ transition_matrix - B.values, "fro")
         objective = cp.Minimize(loss_function)
-        constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, strict)
+        constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraint)
         problem.solve()
         return transition_matrix.value
 
-    def fit(self, A, B, strict=False):
-        transition_matrix = self.__solve(A, B, strict)
-        self.transition_matrix = transition_matrix
+    def mean_absolute_error(self, X, Y):
+        x = self._get_expected_totals(X)
+        y = self._get_expected_totals(Y)
 
-    def predict(self, A):
-        return A @ self.transition_matrix
+        absolute_errors = np.abs(np.matmul(x, self._transition_matrix) - y)
+        error_sum = np.sum(absolute_errors)
+        mae = error_sum / len(absolute_errors)
+
+        return mae
+
+    def fit_predict(self, X, Y):
+        self._check_any_element_nan_or_inf(X)
+        self._check_any_element_nan_or_inf(Y)
+        self._check_percentages(X)
+        self._check_percentages(Y)
+
+        self._transition_matrix = self.__solve(X, Y)
+        LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(X, Y), 4)))
+        return np.diag(self._get_expected_totals(X)) @ self._transition_matrix
