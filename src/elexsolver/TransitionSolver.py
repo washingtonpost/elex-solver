@@ -21,6 +21,9 @@ class TransitionSolver(ABC):
     def mean_absolute_error(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError
 
+    def get_prediction_interval(self, pi: float):
+        raise NotImplementedError
+
     def _get_expected_totals(self, A: np.ndarray):
         output = np.sum(A, axis=0)
         # rescaling in case any columns had been dropped previously
