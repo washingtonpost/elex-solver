@@ -1,7 +1,7 @@
 import logging
 
-import pymc as pm
 import numpy as np
+import pymc as pm
 
 from elexsolver.logging import initialize_logging
 from elexsolver.TransitionSolver import TransitionSolver
@@ -18,14 +18,14 @@ class EITransitionSolver(TransitionSolver):
     Knudson et al., (2021). PyEI: A Python package for ecological inference.
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
     """
-    
+
     def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=1):
         super().__init__()
         self._n = n
-        self._alpha = alpha # lmbda1 in PyEI
-        self._beta = beta # lmbda2 in PyEI, supplied as an int then used as 1 / lmbda2
+        self._alpha = alpha  # lmbda1 in PyEI
+        self._beta = beta  # lmbda2 in PyEI, supplied as an int then used as 1 / lmbda2
         self._chains = sampling_chains
-        self._sampled = None # will not be None after model-fit
+        self._sampled = None  # will not be None after model-fit
 
     def mean_absolute_error(self, X, Y):
         # x = self._get_expected_totals(X)
@@ -36,7 +36,7 @@ class EITransitionSolver(TransitionSolver):
         # mae = error_sum / len(absolute_errors)
 
         # return mae
-        return 0 # TODO
+        return 0  # TODO
 
     def fit_predict(self, X, Y):
         self._check_any_element_nan_or_inf(X)
@@ -58,9 +58,9 @@ class EITransitionSolver(TransitionSolver):
         X = self._check_and_rescale(X)
         Y = self._check_and_rescale(Y)
 
-        num_units = len(self._n) # should be the same as the number of units in Y
-        num_rows = X.shape[0]    # number of things in X that are being transitioned "from"
-        num_cols = Y.shape[0]    # number of things in Y that are being transitioned "to"
+        num_units = len(self._n)  # should be the same as the number of units in Y
+        num_rows = X.shape[0]  # number of things in X that are being transitioned "from"
+        num_cols = Y.shape[0]  # number of things in Y that are being transitioned "to"
 
         # reshaping and rounding
         Y_obs = np.swapaxes(Y * self._n, 0, 1).round()
@@ -69,13 +69,11 @@ class EITransitionSolver(TransitionSolver):
         X_extended = np.swapaxes(X_extended, 0, 1)
 
         with pm.Model() as model:
-            conc_params = pm.Gamma(
-                "conc_params", alpha=self._alpha, beta=self._beta, shape=(num_rows, num_cols)
-            )
+            conc_params = pm.Gamma("conc_params", alpha=self._alpha, beta=self._beta, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
             theta = (X_extended * beta).sum(axis=1)
-            yhat = pm.Multinomial(
-                "transfers",
+            pm.Multinomial(
+                "result_fractions",
                 n=self._n,
                 p=theta,
                 observed=Y_obs,
@@ -84,11 +82,13 @@ class EITransitionSolver(TransitionSolver):
             try:
                 # TODO: allow other samplers; this one is very good but slow
                 model_trace = pm.sample(chains=self._chains)
-            except:
-                print(model.debug())
+            except Exception as e:
+                LOG.debug(model.debug())
+                raise e
 
         b_values = np.transpose(
-            model_trace["posterior"]["beta"].stack(all_draws=["chain", "draw"]).values, axes=(3, 0, 1, 2))
+            model_trace["posterior"]["beta"].stack(all_draws=["chain", "draw"]).values, axes=(3, 0, 1, 2)
+        )
         samples_converted = np.transpose(b_values, axes=(3, 0, 1, 2)) * X.T.values
         samples_summed_across = samples_converted.sum(axis=2)
         self._sampled = np.transpose(samples_summed_across / X.T.sum(axis=0).values, axes=(1, 2, 0))
@@ -102,4 +102,3 @@ class EITransitionSolver(TransitionSolver):
         for col in posterior_mean_rxc.T:
             transitions.append(col * X_totals)
         return np.array(transitions).T
-
