@@ -28,15 +28,12 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = None  # will not be None after model-fit
 
     def mean_absolute_error(self, X, Y):
-        # x = self._get_expected_totals(X)
-        # y = self._get_expected_totals(Y)
-
-        # absolute_errors = np.abs(np.matmul(x, self._transition_matrix) - y)
-        # error_sum = np.sum(absolute_errors)
-        # mae = error_sum / len(absolute_errors)
-
-        # return mae
-        return 0  # TODO
+        y_pred = self._get_expected_totals(X)
+        y = self._get_expected_totals(Y.T)
+        absolute_errors = np.abs(y_pred - y)
+        error_sum = np.sum(absolute_errors)
+        mae = error_sum / len(absolute_errors)
+        return mae
 
     def fit_predict(self, X, Y):
         self._check_any_element_nan_or_inf(X)
@@ -95,10 +92,10 @@ class EITransitionSolver(TransitionSolver):
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
         X_totals = self._get_expected_totals(np.transpose(X))
-        # TODO
-        # LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(X, Y), 4)))
         # to go from inferences to transitions
         transitions = []
         for col in posterior_mean_rxc.T:
             transitions.append(col * X_totals)
-        return np.array(transitions).T
+        transitions = np.array(transitions).T
+        LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(transitions, Y), 4)))
+        return transitions
