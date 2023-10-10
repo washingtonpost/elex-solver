@@ -48,6 +48,17 @@ class TransitionMatrixSolver(TransitionSolver):
         self._check_percentages(X)
         self._check_percentages(Y)
 
+        # matrices should be (units x things), where the number of units is > the number of things
+        if X.shape[1] > X.shape[0]:
+            X = X.T
+        if Y.shape[1] > Y.shape[0]:
+            Y = Y.T
+
+        X = self._check_and_rescale(X.T)
+        X = X.T
+        Y = self._check_and_rescale(Y.T)
+        Y = Y.T
+
         self._transition_matrix = self.__solve(X, Y)
         LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(X, Y), 4)))
         return np.diag(self._get_expected_totals(X)) @ self._transition_matrix

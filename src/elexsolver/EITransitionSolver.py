@@ -38,18 +38,6 @@ class EITransitionSolver(TransitionSolver):
         # return mae
         return 0 # TODO
 
-    def _check_and_rescale(self, A):
-        if not np.all(A.sum(axis=0) == 1):
-            LOG.warn("Each column (unit) needs to sum to 1.  Rescaling...")
-            if isinstance(A, np.ndarray):
-                for j in range(0, A.shape[1]):
-                    A[:, j] /= A[:, j].sum()
-            else:
-                # pandas.DataFrame()
-                for col in A.columns:
-                    A[col] /= A[col].sum()
-        return A
-
     def fit_predict(self, X, Y):
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)

@@ -42,3 +42,18 @@ class TransitionSolver(ABC):
         """
         if not np.all((A >= 0) & (A <= 1)):
             raise ValueError("Matrix contains values less than 0 or greater than 1.")
+
+    def _check_and_rescale(self, A: np.ndarray):
+        """
+        Rescale columns (units) so that they sum to 1 (100%).
+        """
+        if not np.all(A.sum(axis=0) == 1):
+            LOG.warn("Each column (unit) needs to sum to 1.  Rescaling...")
+            if isinstance(A, np.ndarray):
+                for j in range(0, A.shape[1]):
+                    A[:, j] /= A[:, j].sum()
+            else:
+                # pandas.DataFrame()
+                for col in A.columns:
+                    A[col] /= A[col].sum()
+        return A
