@@ -52,8 +52,10 @@ class TransitionSolver(ABC):
             if isinstance(A, np.ndarray):
                 for j in range(0, A.shape[1]):
                     A[:, j] /= A[:, j].sum()
+                return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
             else:
                 # pandas.DataFrame()
                 for col in A.columns:
                     A[col] /= A[col].sum()
+                return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
         return A
