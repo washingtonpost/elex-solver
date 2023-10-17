@@ -25,7 +25,7 @@ class EITransitionSolver(TransitionSolver):
         self._n = n
         self._alpha = alpha  # lmbda1 in PyEI
         self._beta = beta  # lmbda2 in PyEI, supplied as an int then used as 1 / lmbda2
-        self._chains = sampling_chains
+        self._chains = int(sampling_chains)
         self._seed = random_seed
 
         # class members that are instantiated during model-fit
@@ -83,7 +83,7 @@ class EITransitionSolver(TransitionSolver):
             )
             try:
                 # TODO: keep trying to tune this for performance and speed
-                model_trace = pmjax.sample_numpyro_nuts(chains=self._chains, random_seed=self._seed, target_accept=0.95)
+                model_trace = pmjax.sample_numpyro_nuts(chains=self._chains, random_seed=self._seed, target_accept=0.99)
             except Exception as e:
                 LOG.debug(model.debug())
                 raise e
