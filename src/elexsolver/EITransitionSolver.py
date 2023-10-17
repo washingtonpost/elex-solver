@@ -2,6 +2,7 @@ import logging
 
 import numpy as np
 import pymc as pm
+import pymc.sampling.jax as pmjax
 
 from elexsolver.logging import initialize_logging
 from elexsolver.TransitionSolver import TransitionSolver
@@ -64,7 +65,7 @@ class EITransitionSolver(TransitionSolver):
         num_cols = Y.shape[0]  # number of things in Y that are being transitioned "to"
 
         # reshaping and rounding
-        Y_obs = np.swapaxes(Y * self._n, 0, 1).round()
+        Y_obs = np.transpose(Y * self._n).round()
         X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
         X_extended = np.swapaxes(X_extended, 0, 1)
@@ -81,8 +82,8 @@ class EITransitionSolver(TransitionSolver):
                 shape=(num_units, num_cols),
             )
             try:
-                # TODO: allow other samplers; this one is very good but slow
-                model_trace = pm.sample(chains=self._chains, random_seed=self._seed, nuts_sampler="numpyro")
+                # TODO: keep trying to tune this for performance and speed
+                model_trace = pmjax.sample_numpyro_nuts(chains=self._chains, random_seed=self._seed, target_accept=0.95)
             except Exception as e:
                 LOG.debug(model.debug())
                 raise e
