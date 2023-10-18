@@ -29,8 +29,8 @@ class TransitionMatrixSolver(TransitionSolver):
         objective = cp.Minimize(loss_function)
         constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraint)
-        # preferring CVXPY's prior default solver, ECOS, over its new default, Clarabel
-        # because sometimes Clarabel produces negative-values results for our problem
+        # preferring cvxpy's prior default solver, ECOS, over its new default, Clarabel
+        # because sometimes Clarabel produces negative-valued results for our problem
         problem.solve(solver=cp.ECOS)
         return transition_matrix.value
 
