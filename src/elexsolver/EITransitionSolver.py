@@ -19,7 +19,7 @@ class EITransitionSolver(TransitionSolver):
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
     """
 
-    def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=1, random_seed=None):
+    def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=2, random_seed=None):
         super().__init__()
         self._n = n
         self._alpha = alpha  # lmbda1 in PyEI
@@ -83,7 +83,7 @@ class EITransitionSolver(TransitionSolver):
             try:
                 # TODO: keep trying to tune this for performance and speed
                 model_trace = pm.sample(
-                    chains=self._chains, random_seed=self._seed, nuts_sampler="numpyro", cores=1, draws=1500, tune=500
+                    chains=self._chains, random_seed=self._seed, nuts_sampler="numpyro", cores=self._chains, draws=1500, tune=500
                 )
             except Exception as e:
                 LOG.debug(model.debug())
