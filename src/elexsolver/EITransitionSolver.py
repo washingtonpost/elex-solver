@@ -2,7 +2,6 @@ import logging
 
 import numpy as np
 import pymc as pm
-import pymc.sampling.jax as pmjax
 
 from elexsolver.logging import initialize_logging
 from elexsolver.TransitionSolver import TransitionSolver
@@ -70,7 +69,7 @@ class EITransitionSolver(TransitionSolver):
         X_extended = np.repeat(X_extended, num_cols, axis=2)
         X_extended = np.swapaxes(X_extended, 0, 1)
 
-        with pm.Model() as model:
+        with pm.Model(check_bounds=False) as model:
             conc_params = pm.Gamma("conc_params", alpha=self._alpha, beta=self._beta, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
             theta = (X_extended * beta).sum(axis=1)
@@ -83,7 +82,9 @@ class EITransitionSolver(TransitionSolver):
             )
             try:
                 # TODO: keep trying to tune this for performance and speed
-                model_trace = pmjax.sample_numpyro_nuts(chains=self._chains, random_seed=self._seed, target_accept=0.99)
+                model_trace = pm.sample(
+                    chains=self._chains, random_seed=self._seed, nuts_sampler="numpyro", cores=1, draws=1500, tune=500
+                )
             except Exception as e:
                 LOG.debug(model.debug())
                 raise e
