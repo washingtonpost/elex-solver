@@ -1,4 +1,7 @@
 # Changelog
+### 2.0.1 - 2023-10-20
+- chore: Updated all required packages to their latest versions.  Added `numpy` as a requirement. [#14](https://github.com/washingtonpost/elex-solver/pull/14)	
+
 ### 2.0.0 - 2023-09-22
 - feat: adding ordinary least squares regression solver. Updating quantile regression to solve dual [#11](https://github.com/washingtonpost/elex-solver/pull/11)
 
@@ -30,7 +33,3 @@
  - Normalizing weights
 
 ### Initial release - 2022-01-24
-
-
-
- 
