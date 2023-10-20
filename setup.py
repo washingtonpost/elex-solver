@@ -3,7 +3,7 @@ from codecs import open
 
 from setuptools import find_packages, setup
 
-INSTALL_REQUIRES = ["cvxpy<=1.2.0", "scipy<1.11.0"]
+INSTALL_REQUIRES = ["cvxpy~=1.4", "numpy~=1.26", "scipy~=1.11"]
 
 THIS_FILE_DIR = os.path.dirname(__file__)
 
@@ -13,13 +13,13 @@ with open(os.path.join(THIS_FILE_DIR, "README.md"), encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
 # The full version, including alpha/beta/rc tags
-RELEASE = "2.0.0"
+RELEASE = "2.0.1"
 # The short X.Y version
 VERSION = ".".join(RELEASE.split(".")[:2])
 
 PROJECT = "elex-solver"
 AUTHOR = "The Wapo Newsroom Engineering Team"
-COPYRIGHT = "2021, {}".format(AUTHOR)
+COPYRIGHT = "2023, {}".format(AUTHOR)
 
 
 setup(
