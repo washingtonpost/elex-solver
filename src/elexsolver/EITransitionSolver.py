@@ -19,11 +19,10 @@ class EITransitionSolver(TransitionSolver):
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
     """
 
-    def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=2, random_seed=None, draws=300):
+    def __init__(self, n: np.ndarray, sigma=1, sampling_chains=2, random_seed=None, draws=300):
         super().__init__()
         self._n = n
-        self._alpha = alpha  # lmbda1 in PyEI
-        self._beta = beta  # lmbda2 in PyEI, in PyEI supplied as an int then used as 1 / lmbda2
+        self._sigma = sigma
         self._chains = int(sampling_chains)
         self._seed = random_seed
         self._draws = draws
@@ -72,9 +71,8 @@ class EITransitionSolver(TransitionSolver):
         X_extended = np.swapaxes(X_extended, 0, 1)
 
         with pm.Model(check_bounds=False) as model:
-            conc_params = pm.Gamma("conc_params", alpha=self._alpha, beta=self._beta, shape=(num_rows, num_cols))
+            conc_params = pm.HalfNormal("conc_params", sigma=self._sigma, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
-            # beta = pm.Dirichlet("beta", a=np.ones((num_rows, num_cols)), shape=(num_units, num_rows, num_cols))
             theta = (X_extended * beta).sum(axis=1)
             pm.Multinomial(
                 "result_fractions",
