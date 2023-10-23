@@ -51,7 +51,8 @@ class TransitionSolver(ABC):
         if A.shape[1] <= A.shape[0] or (A.shape[1] // 2) <= A.shape[0]:
             raise ValueError(f"Not enough units ({A.shape[1]}) relative to the number of things ({A.shape[0]}).")
 
-        if not np.all(A.sum(axis=0) == 1):
+        unit_totals = A.sum(axis=0)
+        if not np.allclose(unit_totals, np.ones(unit_totals.shape)):
             LOG.warn("Each unit needs to sum to 1.  Rescaling...")
             if isinstance(A, np.ndarray):
                 for j in range(0, A.shape[1]):
