@@ -19,13 +19,15 @@ class EITransitionSolver(TransitionSolver):
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
     """
 
-    def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=2, random_seed=None):
+    def __init__(self, n: np.ndarray, alpha=4, beta=0.5, sampling_chains=2, random_seed=None, draws=300):
         super().__init__()
         self._n = n
         self._alpha = alpha  # lmbda1 in PyEI
-        self._beta = beta  # lmbda2 in PyEI, supplied as an int then used as 1 / lmbda2
+        self._beta = beta  # lmbda2 in PyEI, in PyEI supplied as an int then used as 1 / lmbda2
         self._chains = int(sampling_chains)
         self._seed = random_seed
+        self._draws = draws
+        self._tune = draws // 2
 
         # class members that are instantiated during model-fit
         self._sampled = None
@@ -72,6 +74,7 @@ class EITransitionSolver(TransitionSolver):
         with pm.Model(check_bounds=False) as model:
             conc_params = pm.Gamma("conc_params", alpha=self._alpha, beta=self._beta, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
+            # beta = pm.Dirichlet("beta", a=np.ones((num_rows, num_cols)), shape=(num_units, num_rows, num_cols))
             theta = (X_extended * beta).sum(axis=1)
             pm.Multinomial(
                 "result_fractions",
@@ -83,7 +86,12 @@ class EITransitionSolver(TransitionSolver):
             try:
                 # TODO: keep trying to tune this for performance and speed
                 model_trace = pm.sample(
-                    chains=self._chains, random_seed=self._seed, nuts_sampler="numpyro", cores=self._chains, draws=1500, tune=500
+                    chains=self._chains,
+                    random_seed=self._seed,
+                    nuts_sampler="numpyro",
+                    cores=self._chains,
+                    draws=self._draws,
+                    tune=self._tune,
                 )
             except Exception as e:
                 LOG.debug(model.debug())
