@@ -56,10 +56,10 @@ class TransitionMatrixSolver(TransitionSolver):
         if Y.shape[1] > Y.shape[0]:
             Y = Y.T
 
-        X = self._check_and_rescale(X.T)
-        X = X.T
-        Y = self._check_and_rescale(Y.T)
-        Y = Y.T
+        self._check_dimensions(X.T)
+        X = self._rescale(X.T).T
+        self._check_dimensions(Y.T)
+        Y = self._rescale(Y.T).T
 
         self._transition_matrix = self.__solve(X, Y)
         LOG.info("MAE = %s", np.around(self.mean_absolute_error(X, Y), 4))

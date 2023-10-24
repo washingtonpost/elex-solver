@@ -43,14 +43,18 @@ class TransitionSolver(ABC):
         if not np.all((A >= 0) & (A <= 1)):
             raise ValueError("Matrix contains values less than 0 or greater than 1.")
 
-    def _check_and_rescale(self, A: np.ndarray):
+    def _check_dimensions(self, A: np.ndarray):
         """
-        After ensuring that A is (things x units), make sure we have enough units.
-        If that's the case, rescale columns (units) so that they sum to 1 (100%).
+        Ensure that in our (things x units) matrix, the number of units is
+        at least twice as large as the number of things.
         """
         if A.shape[1] <= A.shape[0] or (A.shape[1] // 2) <= A.shape[0]:
             raise ValueError(f"Not enough units ({A.shape[1]}) relative to the number of things ({A.shape[0]}).")
 
+    def _rescale(self, A: np.ndarray):
+        """
+        Rescale columns (units) to ensure they sum to 1 (100%).
+        """
         unit_totals = A.sum(axis=0)
         if not np.allclose(unit_totals, np.ones(unit_totals.shape)):
             LOG.warning("Each unit needs to sum to 1.  Rescaling...")

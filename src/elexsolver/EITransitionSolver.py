@@ -57,8 +57,10 @@ class EITransitionSolver(TransitionSolver):
         if Y.shape[1] != len(self._n):
             raise ValueError(f"Number of units in Y ({Y.shape[1]}) != number of units in n ({len(self._n)}).")
 
-        X = self._check_and_rescale(X)
-        Y = self._check_and_rescale(Y)
+        self._check_dimensions(X)
+        X = self._rescale(X)
+        self._check_dimensions(Y)
+        Y = self._rescale(Y)
 
         num_units = len(self._n)  # should be the same as the number of units in Y
         num_rows = X.shape[0]  # number of things in X that are being transitioned "from"
