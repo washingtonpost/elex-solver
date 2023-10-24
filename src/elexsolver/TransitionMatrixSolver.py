@@ -62,5 +62,5 @@ class TransitionMatrixSolver(TransitionSolver):
         Y = Y.T
 
         self._transition_matrix = self.__solve(X, Y)
-        LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(X, Y), 4)))
+        LOG.info("MAE = %s", np.around(self.mean_absolute_error(X, Y), 4))
         return np.diag(self._get_expected_totals(X)) @ self._transition_matrix

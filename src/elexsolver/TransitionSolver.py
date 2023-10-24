@@ -53,14 +53,13 @@ class TransitionSolver(ABC):
 
         unit_totals = A.sum(axis=0)
         if not np.allclose(unit_totals, np.ones(unit_totals.shape)):
-            LOG.warn("Each unit needs to sum to 1.  Rescaling...")
+            LOG.warning("Each unit needs to sum to 1.  Rescaling...")
             if isinstance(A, np.ndarray):
                 for j in range(0, A.shape[1]):
                     A[:, j] /= A[:, j].sum()
                 return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
-            else:
-                # pandas.DataFrame()
-                for col in A.columns:
-                    A[col] /= A[col].sum()
-                return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
+            # pandas.DataFrame()
+            for col in A.columns:
+                A[col] /= A[col].sum()
+            return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
         return A

@@ -105,7 +105,7 @@ class EITransitionSolver(TransitionSolver):
         posterior_mean_rxc = self._sampled.mean(axis=0)
         self._X_totals = self._get_expected_totals(np.transpose(X))
         transitions = self._get_transitions(posterior_mean_rxc)
-        LOG.info("MAE = {}".format(np.around(self.mean_absolute_error(transitions, Y), 4)))
+        LOG.info("MAE = %s", np.around(self.mean_absolute_error(transitions, Y), 4))
         return transitions
 
     def _get_transitions(self, A: np.ndarray):
