@@ -94,8 +94,18 @@ def test_rescale_skipped():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_rescale_rescaled():
+def test_rescale_rescaled_numpy():
     A = np.ones((2, 2))
     expected = np.array([[0.5, 0.5], [0.5, 0.5]])
     ts = TransitionSolver()
     np.testing.assert_array_equal(ts._rescale(A), expected)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_rescale_rescaled_pandas():
+    import pandas
+
+    a_df = pandas.DataFrame(np.ones((2, 2)), columns=["A", "B"])
+    expected_df = pandas.DataFrame([[0.5, 0.5], [0.5, 0.5]], columns=["A", "B"])
+    ts = TransitionSolver()
+    np.testing.assert_array_equal(ts._rescale(a_df), expected_df)  # pylint: disable=protected-access
