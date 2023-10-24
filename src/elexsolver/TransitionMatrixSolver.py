@@ -25,7 +25,7 @@ class TransitionMatrixSolver(TransitionSolver):
 
     def __solve(self, A, B):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]))
-        loss_function = cp.norm(A.values @ transition_matrix - B.values, "fro")
+        loss_function = cp.norm(A @ transition_matrix - B, "fro")
         objective = cp.Minimize(loss_function)
         constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraint)
@@ -60,6 +60,11 @@ class TransitionMatrixSolver(TransitionSolver):
         X = self._rescale(X.T).T
         self._check_dimensions(Y.T)
         Y = self._rescale(Y.T).T
+
+        if not isinstance(X, np.ndarray):
+            X = X.to_numpy()
+        if not isinstance(Y, np.ndarray):
+            Y = Y.to_numpy()
 
         self._transition_matrix = self.__solve(X, Y)
         LOG.info("MAE = %s", np.around(self.mean_absolute_error(X, Y), 4))
