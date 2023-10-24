@@ -63,3 +63,39 @@ def test_check_percentages_good():
     A = np.array([[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]])
     ts = TransitionSolver()
     ts._check_percentages(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_dimensions_bad():
+    with pytest.raises(ValueError):
+        A = np.array([[0.1, 0.2, 0.3]])
+        ts = TransitionSolver()
+        ts._check_dimensions(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_dimensions_good():
+    A = np.array(
+        [
+            [0.1, 0.4, 0.7, 0.1, 0.4, 0.7, 0.1, 0.4, 0.7],
+            [0.2, 0.5, 0.8, 0.2, 0.5, 0.8, 0.2, 0.5, 0.8],
+            [0.3, 0.6, 0.9, 0.3, 0.6, 0.9, 0.3, 0.6, 0.9],
+        ]
+    )
+    ts = TransitionSolver()
+    ts._check_dimensions(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_rescale_skipped():
+    A = np.ones((10, 2)) / 10
+    ts = TransitionSolver()
+    np.testing.assert_array_equal(ts._rescale(A), A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_rescale_rescaled():
+    A = np.ones((2, 2))
+    expected = np.array([[0.5, 0.5], [0.5, 0.5]])
+    ts = TransitionSolver()
+    np.testing.assert_array_equal(ts._rescale(A), expected)  # pylint: disable=protected-access
