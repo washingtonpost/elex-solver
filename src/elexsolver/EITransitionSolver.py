@@ -39,6 +39,8 @@ class EITransitionSolver(TransitionSolver):
         """
         X and Y are matrixes of integers.
         """
+        self._check_data_type(X)
+        self._check_data_type(Y)
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
 

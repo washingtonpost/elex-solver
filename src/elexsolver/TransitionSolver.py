@@ -31,7 +31,11 @@ class TransitionSolver(ABC):
         Check whether any element in a matrix or vector is NaN or infinity
         """
         if np.any(np.isnan(A)) or np.any(np.isinf(A)):
-            raise ValueError("Matrix contains NaN or Infinity")
+            raise ValueError("Matrix contains NaN or Infinity.")
+
+    def _check_data_type(self, A: np.ndarray):
+        if not np.all(A.astype("int64") == A):
+            raise ValueError("Matrix must contain integers.")
 
     def _check_dimensions(self, A: np.ndarray):
         """

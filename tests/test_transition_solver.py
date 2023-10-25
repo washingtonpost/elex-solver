@@ -67,13 +67,6 @@ def test_check_dimensions_good():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_rescale_skipped():
-    A = np.ones((10, 2)) / 10
-    ts = TransitionSolver()
-    np.testing.assert_array_equal(ts._rescale(A), A)  # pylint: disable=protected-access
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
 def test_rescale_rescaled_numpy():
     A = np.ones((2, 2))
     expected = np.array([[0.5, 0.5], [0.5, 0.5]])
@@ -89,3 +82,18 @@ def test_rescale_rescaled_pandas():
     expected_df = pandas.DataFrame([[0.5, 0.5], [0.5, 0.5]], columns=["A", "B"])
     ts = TransitionSolver()
     np.testing.assert_array_equal(ts._rescale(a_df), expected_df)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_data_type_good():
+    A = np.array([[1, 2, 3], [4, 5, 6]])
+    ts = TransitionSolver()
+    ts._check_data_type(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_data_type_bad():
+    with pytest.raises(ValueError):
+        A = np.array([[0.1, 0.2, 0.3]])
+        ts = TransitionSolver()
+        ts._check_data_type(A)  # pylint: disable=protected-access
