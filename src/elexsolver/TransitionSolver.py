@@ -18,16 +18,13 @@ class TransitionSolver(ABC):
     def fit_predict(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError
 
-    def mean_absolute_error(self, X: np.ndarray, Y: np.ndarray):
-        raise NotImplementedError
-
     def get_prediction_interval(self, pi: float):
         raise NotImplementedError
 
-    def _get_expected_totals(self, A: np.ndarray):
-        output = np.sum(A, axis=0)
-        # rescaling in case any columns had been dropped previously
-        return output / sum(output)
+    def mean_absolute_error(self, Y_expected: np.ndarray, Y_pred: np.ndarray):
+        absolute_errors = np.abs(Y_pred - Y_expected)
+        error_sum = np.sum(absolute_errors)
+        return error_sum / len(absolute_errors)
 
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """
@@ -35,13 +32,6 @@ class TransitionSolver(ABC):
         """
         if np.any(np.isnan(A)) or np.any(np.isinf(A)):
             raise ValueError("Matrix contains NaN or Infinity")
-
-    def _check_percentages(self, A: np.ndarray):
-        """
-        Verify that every element in matrix A is >= 0 and <= 1.
-        """
-        if not np.all((A >= 0) & (A <= 1)):
-            raise ValueError("Matrix contains values less than 0 or greater than 1.")
 
     def _check_dimensions(self, A: np.ndarray):
         """
@@ -55,15 +45,11 @@ class TransitionSolver(ABC):
         """
         Rescale columns (units) to ensure they sum to 1 (100%).
         """
-        unit_totals = A.sum(axis=0)
-        if not np.allclose(unit_totals, np.ones(unit_totals.shape)):
-            LOG.warning("Each unit needs to sum to 1.  Rescaling...")
-            if isinstance(A, np.ndarray):
-                for j in range(0, A.shape[1]):
-                    A[:, j] /= A[:, j].sum()
-                return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
-            # pandas.DataFrame()
-            for col in A.columns:
-                A[col] /= A[col].sum()
-            return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
-        return A
+        if isinstance(A, np.ndarray):
+            for j in range(0, A.shape[1]):
+                A[:, j] /= A[:, j].sum()
+            return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
+        # pandas.DataFrame()
+        for col in A.columns:
+            A[col] /= A[col].sum()
+        return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)

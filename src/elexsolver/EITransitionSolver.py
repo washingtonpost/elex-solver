@@ -14,37 +14,33 @@ LOG = logging.getLogger(__name__)
 class EITransitionSolver(TransitionSolver):
     """
     A (voter) transition solver based on RxC ecological inference.
-    Largely adapted from version 1.0.1 of
+    Somewhat adapted from version 1.0.1 of
     Knudson et al., (2021). PyEI: A Python package for ecological inference.
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
+    See also:
+    Ori Rosen, Wenxin Jiang, Gary King, and Martin A Tanner. 2001.
+    “Bayesian and Frequentist Inference for Ecological Inference: The RxC Case.”
+    Statistica Neerlandica, 55, Pp. 134–156. Copy at https://tinyurl.com/yajkae6n
     """
 
-    def __init__(self, n: np.ndarray, sigma=1, sampling_chains=2, random_seed=None, draws=300):
+    def __init__(self, sigma=1, sampling_chains=2, random_seed=None, n_samples=300):
         super().__init__()
-        self._n = n
         self._sigma = sigma
         self._chains = int(sampling_chains)
         self._seed = random_seed
-        self._draws = draws
-        self._tune = draws // 2
+        self._draws = n_samples
+        self._tune = n_samples // 2
 
         # class members that are instantiated during model-fit
         self._sampled = None
         self._X_totals = None
 
-    def mean_absolute_error(self, X, Y):
-        y_pred = self._get_expected_totals(X)
-        y = self._get_expected_totals(Y.T)
-        absolute_errors = np.abs(y_pred - y)
-        error_sum = np.sum(absolute_errors)
-        mae = error_sum / len(absolute_errors)
-        return mae
-
     def fit_predict(self, X, Y):
+        """
+        X and Y are matrixes of integers.
+        """
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
-        self._check_percentages(X)
-        self._check_percentages(Y)
 
         # matrices should be (things x units), where the number of units is > the number of things
         if X.shape[0] > X.shape[1]:
@@ -52,22 +48,25 @@ class EITransitionSolver(TransitionSolver):
         if Y.shape[0] > Y.shape[1]:
             Y = Y.T
 
+        self._check_dimensions(X)
+        self._check_dimensions(Y)
+
         if X.shape[1] != Y.shape[1]:
             raise ValueError(f"Number of units in X ({X.shape[1]}) != number of units in Y ({Y.shape[1]}).")
-        if Y.shape[1] != len(self._n):
-            raise ValueError(f"Number of units in Y ({Y.shape[1]}) != number of units in n ({len(self._n)}).")
 
-        self._check_dimensions(X)
+        self._X_totals = X.sum(axis=1) / X.sum(axis=1).sum()
+        Y_expected_totals = Y.sum(axis=1) / Y.sum(axis=1).sum()
+        n = Y.sum(axis=0)
+
         X = self._rescale(X)
-        self._check_dimensions(Y)
         Y = self._rescale(Y)
 
-        num_units = len(self._n)  # should be the same as the number of units in Y
+        num_units = len(n)  # should be the same as the number of units in Y
         num_rows = X.shape[0]  # number of things in X that are being transitioned "from"
         num_cols = Y.shape[0]  # number of things in Y that are being transitioned "to"
 
         # reshaping and rounding
-        Y_obs = np.transpose(Y * self._n).round()
+        Y_obs = np.transpose(Y * n).round()
         X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
         X_extended = np.swapaxes(X_extended, 0, 1)
@@ -78,7 +77,7 @@ class EITransitionSolver(TransitionSolver):
             theta = (X_extended * beta).sum(axis=1)
             pm.Multinomial(
                 "result_fractions",
-                n=self._n,
+                n=n,
                 p=theta,
                 observed=Y_obs,
                 shape=(num_units, num_cols),
@@ -105,9 +104,9 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = np.transpose(samples_summed_across / X.T.sum(axis=0).values, axes=(1, 2, 0))
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
-        self._X_totals = self._get_expected_totals(np.transpose(X))
         transitions = self._get_transitions(posterior_mean_rxc)
-        LOG.info("MAE = %s", np.around(self.mean_absolute_error(transitions, Y), 4))
+        Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
+        LOG.info("MAE = %s", np.around(self.mean_absolute_error(Y_pred_totals, Y_expected_totals), 4))
         return transitions
 
     def _get_transitions(self, A: np.ndarray):
