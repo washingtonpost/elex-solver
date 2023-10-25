@@ -47,7 +47,7 @@ class TransitionSolver(ABC):
         """
         if isinstance(A, np.ndarray):
             for j in range(0, A.shape[1]):
-                A[:, j] /= A[:, j].sum()
+                A[:, j] = A[:, j] / A[:, j].sum()
             return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
         # pandas.DataFrame()
         for col in A.columns:
