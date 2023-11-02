@@ -1,4 +1,5 @@
 import logging
+import warnings
 from abc import ABC
 
 import numpy as np
@@ -50,9 +51,15 @@ class TransitionSolver(ABC):
         Rescale columns (units) to ensure they sum to 1 (100%).
         """
         if isinstance(A, np.ndarray):
-            for j in range(0, A.shape[1]):
-                A[:, j] = A[:, j] / A[:, j].sum()
-            return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
+            with warnings.catch_warnings():
+                # Zeros are completely ok here;
+                # means the candidate received zero votes.
+                warnings.filterwarnings(
+                    "ignore", category=RuntimeWarning, message="invalid value encountered in divide"
+                )
+                for j in range(0, A.shape[1]):
+                    A[:, j] = A[:, j] / A[:, j].sum()
+                return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
         # pandas.DataFrame()
         for col in A.columns:
             A[col] /= A[col].sum()
