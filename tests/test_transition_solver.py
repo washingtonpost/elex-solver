@@ -57,13 +57,46 @@ def test_check_dimensions_bad():
 def test_check_dimensions_good():
     A = np.array(
         [
-            [0.1, 0.4, 0.7, 0.1, 0.4, 0.7, 0.1, 0.4, 0.7],
-            [0.2, 0.5, 0.8, 0.2, 0.5, 0.8, 0.2, 0.5, 0.8],
-            [0.3, 0.6, 0.9, 0.3, 0.6, 0.9, 0.3, 0.6, 0.9],
+            [0.1, 0.2, 0.3],
+            [0.4, 0.5, 0.6],
+            [0.7, 0.8, 0.9],
+            [0.1, 0.2, 0.3],
+            [0.4, 0.5, 0.6],
+            [0.7, 0.8, 0.9],
+            [0.1, 0.2, 0.3],
+            [0.4, 0.5, 0.6],
+            [0.7, 0.8, 0.9],
         ]
     )
     ts = TransitionSolver()
     ts._check_dimensions(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_for_zero_units_good():
+    A = np.array(
+        [
+            [0.1, 0.2, 0.3],
+            [0.4, 0.5, 0.6],
+            [0.7, 0.8, 0.9],
+        ]
+    )
+    ts = TransitionSolver()
+    ts._check_for_zero_units(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_for_zero_units_bad():
+    with pytest.raises(ValueError):
+        A = np.array(
+            [
+                [0.1, 0.2, 0.3],
+                [0.0, 0.0, 0.0],
+                [0.7, 0.8, 0.9],
+            ]
+        )
+        ts = TransitionSolver()
+        ts._check_for_zero_units(A)  # pylint: disable=protected-access
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())

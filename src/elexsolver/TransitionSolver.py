@@ -40,20 +40,27 @@ class TransitionSolver(ABC):
 
     def _check_dimensions(self, A: np.ndarray):
         """
-        Ensure that in our (things x units) matrix, the number of units is
+        Ensure that in our (units x things) matrix, the number of units is
         at least twice as large as the number of things.
         """
-        if A.shape[1] <= A.shape[0] or (A.shape[1] // 2) <= A.shape[0]:
-            raise ValueError(f"Not enough units ({A.shape[1]}) relative to the number of things ({A.shape[0]}).")
+        if A.shape[0] <= A.shape[1] or (A.shape[0] // 2) <= A.shape[1]:
+            raise ValueError(f"Not enough units ({A.shape[0]}) relative to the number of things ({A.shape[1]}).")
+
+    def _check_for_zero_units(self, A: np.ndarray):
+        """
+        If we have at least one unit whose columns are all zero, we can't continue.
+        """
+        if np.any(np.sum(A, axis=1) == 0):
+            raise ValueError("Matrix cannot contain any rows (units) where all columns (things) are zero.")
 
     def _rescale(self, A: np.ndarray):
         """
-        Rescale columns (units) to ensure they sum to 1 (100%).
+        Rescale columns (things) to ensure they sum to 1 (100%).
         """
         if isinstance(A, np.ndarray):
             with warnings.catch_warnings():
                 # Zeros are completely ok here;
-                # means the candidate received zero votes.
+                # means the thing (e.g. candidate) received zero votes.
                 warnings.filterwarnings(
                     "ignore", category=RuntimeWarning, message="invalid value encountered in divide"
                 )
