@@ -49,8 +49,10 @@ class TransitionMatrixSolver(TransitionSolver):
         if Y.shape[1] > Y.shape[0]:
             Y = Y.T
 
-        self._check_dimensions(X.T)
-        self._check_dimensions(Y.T)
+        self._check_dimensions(X)
+        self._check_dimensions(Y)
+        self._check_for_zero_units(X)
+        self._check_for_zero_units(Y)
 
         if not isinstance(X, np.ndarray):
             X = X.to_numpy()
