@@ -44,17 +44,24 @@ class EITransitionSolver(TransitionSolver):
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
 
-        # matrices should be (things x units), where the number of units is > the number of things
-        if X.shape[0] > X.shape[1]:
+        # first, ensure matrices are (units x things), where the number of units is > the number of things
+        # this will allow us to re-use some of the same checks we use for all other solvers
+        if X.shape[1] > X.shape[0]:
             X = X.T
-        if Y.shape[0] > Y.shape[1]:
+        if Y.shape[1] > Y.shape[0]:
             Y = Y.T
+
+        if X.shape[0] != Y.shape[0]:
+            raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
 
         self._check_dimensions(X)
         self._check_dimensions(Y)
+        self._check_for_zero_units(X)
+        self._check_for_zero_units(Y)
 
-        if X.shape[1] != Y.shape[1]:
-            raise ValueError(f"Number of units in X ({X.shape[1]}) != number of units in Y ({Y.shape[1]}).")
+        # but for this solver, we need our matrices to be (things x units)
+        X = X.T
+        Y = Y.T
 
         self._X_totals = X.sum(axis=1) / X.sum(axis=1).sum()
         Y_expected_totals = Y.sum(axis=1) / Y.sum(axis=1).sum()
