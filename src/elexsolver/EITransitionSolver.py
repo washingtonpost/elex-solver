@@ -9,6 +9,8 @@ from elexsolver.TransitionSolver import TransitionSolver
 initialize_logging()
 
 LOG = logging.getLogger(__name__)
+logging.getLogger("pymc").setLevel(logging.ERROR)
+logging.getLogger("jax").setLevel(logging.ERROR)
 
 
 class EITransitionSolver(TransitionSolver):
