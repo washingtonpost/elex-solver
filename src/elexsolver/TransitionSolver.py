@@ -11,10 +11,19 @@ initialize_logging()
 LOG = logging.getLogger(__name__)
 
 
+def mean_absolute_error(Y_expected: np.ndarray, Y_pred: np.ndarray):
+    absolute_errors = np.abs(Y_pred - Y_expected)
+    error_sum = np.sum(absolute_errors)
+    return error_sum / len(absolute_errors)
+
+
 class TransitionSolver(ABC):
     """
     Abstract class for (voter) transition solvers.
     """
+
+    def __init__(self):
+        self._mae = None
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray):
         raise NotImplementedError
@@ -22,10 +31,9 @@ class TransitionSolver(ABC):
     def get_prediction_interval(self, pi: float):
         raise NotImplementedError
 
-    def mean_absolute_error(self, Y_expected: np.ndarray, Y_pred: np.ndarray):
-        absolute_errors = np.abs(Y_pred - Y_expected)
-        error_sum = np.sum(absolute_errors)
-        return error_sum / len(absolute_errors)
+    @property
+    def MAE(self):
+        return self._mae
 
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """

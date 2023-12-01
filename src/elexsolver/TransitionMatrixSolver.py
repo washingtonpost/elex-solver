@@ -4,7 +4,7 @@ import cvxpy as cp
 import numpy as np
 
 from elexsolver.logging import initialize_logging
-from elexsolver.TransitionSolver import TransitionSolver
+from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
 
 initialize_logging()
 
@@ -68,6 +68,7 @@ class TransitionMatrixSolver(TransitionSolver):
         self._transition_matrix = self.__solve(X, Y)
         transitions = np.diag(X_expected_totals) @ self._transition_matrix
         Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
-        LOG.info("MAE = %s", np.around(self.mean_absolute_error(Y_expected_totals, Y_pred_totals), 4))
+        self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
+        LOG.info("MAE = %s", np.around(self._mae, 4))
 
         return transitions
