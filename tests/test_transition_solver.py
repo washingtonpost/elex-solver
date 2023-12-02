@@ -3,7 +3,15 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from elexsolver.TransitionSolver import TransitionSolver
+from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
+
+
+def test_mean_absolute_error():
+    Y = np.ones((5, 4))
+    Y_pred = Y - 0.02
+    expected = 0.08
+    current = np.around(mean_absolute_error(Y, Y_pred), 6)
+    np.testing.assert_allclose(expected, current)
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
@@ -18,16 +26,6 @@ def test_superclass_get_prediction_interval():
     with pytest.raises(NotImplementedError):
         ts = TransitionSolver()
         ts.get_prediction_interval(0)
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_mean_absolute_error():
-    Y = np.ones((5, 4))
-    Y_pred = Y - 0.02
-    expected = 0.08
-    ts = TransitionSolver()
-    current = np.around(ts.mean_absolute_error(Y, Y_pred), 6)
-    np.testing.assert_allclose(expected, current)
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
