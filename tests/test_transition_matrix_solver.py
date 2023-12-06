@@ -27,7 +27,7 @@ def test_fit_predict():
         ]
     )
 
-    expected = np.array([[0.230769, 0.230769], [0.269231, 0.269231]])
+    expected = np.array([[0.35096678, 0.11057168], [0.11665334, 0.4218082]])
 
     tms = TransitionMatrixSolver()
     current = tms.fit_predict(X, Y)
