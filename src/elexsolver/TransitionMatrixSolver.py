@@ -24,14 +24,12 @@ class TransitionMatrixSolver(TransitionSolver):
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
     def __solve(self, A, B):
-        transition_matrix = cp.Variable((A.shape[1], B.shape[1]))
+        transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
         loss_function = cp.norm(A @ transition_matrix - B, "fro")
         objective = cp.Minimize(loss_function)
         constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraint)
-        # preferring cvxpy's prior default solver, ECOS, over its new default, Clarabel
-        # because sometimes Clarabel produces negative-valued results for our problem
-        problem.solve(solver=cp.ECOS)
+        problem.solve(solver=cp.CLARABEL)
         return transition_matrix.value
 
     def fit_predict(self, X, Y):
