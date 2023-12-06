@@ -70,6 +70,8 @@ class TransitionSolver(ABC):
         """
         Rescale columns (things) to ensure they sum to 1 (100%).
         """
+        A = A.copy().astype(float)
+
         if isinstance(A, np.ndarray):
             with warnings.catch_warnings():
                 # Zeros are completely ok here;
