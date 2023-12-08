@@ -85,6 +85,18 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         super().__init__()
         self._strict = strict
 
+    def _constrained_random_numbers(self, n, M, seed=None):
+        """
+        Generate n random numbers that sum to M.
+        Based on: https://stackoverflow.com/a/30659457/224912
+        """
+        rng = np.random.default_rng(seed=seed)
+        splits = [0] + [rng.random() for _ in range(0, n - 1)] + [1]
+        splits.sort()
+        diffs = [x - splits[i - 1] for (i, x) in enumerate(splits)][1:]
+        result = map(lambda x: x * M, diffs)
+        return list(result)
+
     def fit_predict(self, X, Y):
         tm = TransitionMatrixSolver(strict=self._strict)
         _ = tm.fit_predict(X, Y)
@@ -94,7 +106,8 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         residuals_hat = resample(tm._residuals, replace=True, random_state=1024)
         Y_hat = tm._Y.copy()
         for j in range(0, Y_hat.shape[1]):
-            Y_hat[:, j] = Y_hat[:, j] + (residuals_hat[j] / len(Y_hat))
+            residuals_j = self._constrained_random_numbers(len(Y_hat), residuals_hat[j], seed=j)
+            Y_hat[:, j] = Y_hat[:, j] + residuals_j
 
         transition_matrix_hat = tm._solve(tm._X, Y_hat)
         transitions_hat = np.diag(tm._X_expected_totals) @ transition_matrix_hat
