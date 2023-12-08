@@ -81,9 +81,10 @@ class TransitionMatrixSolver(TransitionSolver):
 
 
 class BootstrapTransitionMatrixSolver(TransitionSolver):
-    def __init__(self, B=1, strict=True):
+    def __init__(self, B=1000, strict=True):
         super().__init__()
         self._strict = strict
+        self._B = B
 
     def _constrained_random_numbers(self, n, M, seed=None):
         """
@@ -99,19 +100,27 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
 
     def fit_predict(self, X, Y):
         tm = TransitionMatrixSolver(strict=self._strict)
-        _ = tm.fit_predict(X, Y)
+        transitions = tm.fit_predict(X, Y)
 
         from sklearn.utils import resample  # to be replaced
 
-        residuals_hat = resample(tm._residuals, replace=True, random_state=1024)
-        Y_hat = tm._Y.copy()
-        for j in range(0, Y_hat.shape[1]):
-            residuals_j = self._constrained_random_numbers(len(Y_hat), residuals_hat[j], seed=j)
-            Y_hat[:, j] = Y_hat[:, j] + residuals_j
+        maes = []
 
-        transition_matrix_hat = tm._solve(tm._X, Y_hat)
-        transitions_hat = np.diag(tm._X_expected_totals) @ transition_matrix_hat
-        Y_pred_totals = np.sum(transitions_hat, axis=0) / np.sum(transitions_hat, axis=0).sum()
-        self._mae = mean_absolute_error(tm._Y_expected_totals, Y_pred_totals)
-        LOG.info("MAE = %s", np.around(self._mae, 4))
-        return transitions_hat
+        for b in range(0, self._B):
+            residuals_hat = resample(tm._residuals, replace=True, random_state=b)
+            Y_hat = tm._Y.copy()
+            for j in range(0, Y_hat.shape[1]):
+                residuals_j = self._constrained_random_numbers(len(Y_hat), residuals_hat[j], seed=j)
+                Y_hat[:, j] = Y_hat[:, j] + residuals_j
+
+            transition_matrix_hat = tm._solve(tm._X, Y_hat)
+            transitions_hat = np.diag(tm._X_expected_totals) @ transition_matrix_hat
+            transitions = transitions + transitions_hat
+
+            Y_pred_totals = np.sum(transitions_hat, axis=0) / np.sum(transitions_hat, axis=0).sum()
+            this_mae = mean_absolute_error(tm._Y_expected_totals, Y_pred_totals)
+            maes.append(this_mae)
+            LOG.info("MAE = %s", np.around(this_mae, 4))
+
+        self._mae = np.mean(maes)
+        return transitions / self._B
