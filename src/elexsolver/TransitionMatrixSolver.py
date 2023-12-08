@@ -30,18 +30,21 @@ class TransitionMatrixSolver(TransitionSolver):
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
-    def _solve(self, A, B):
+    def _solve(self, A, B, weights):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
-        loss_function = cp.norm(A @ transition_matrix - B, "fro")
+        Aw = np.dot(weights, A)
+        Bw = np.dot(weights, B)
+        loss_function = cp.norm(Aw @ transition_matrix - Bw, "fro")
         objective = cp.Minimize(loss_function)
         constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraint)
         problem.solve(solver=cp.CLARABEL)
         return transition_matrix.value
 
-    def fit_predict(self, X, Y):
+    def fit_predict(self, X, Y, weights=None):
         """
         X and Y are matrixes of integers.
+        weights is a list or numpy array with the same length as both X and Y.
         """
         self._check_data_type(X)
         self._check_data_type(Y)
@@ -70,7 +73,9 @@ class TransitionMatrixSolver(TransitionSolver):
         self._X = self._rescale(X.T).T
         self._Y = self._rescale(Y.T).T
 
-        transition_matrix = self._solve(self._X, self._Y)
+        weights = self._check_and_prepare_weights(self._X, self._Y, weights)
+
+        transition_matrix = self._solve(self._X, self._Y, weights)
         transitions = np.diag(self._X_expected_totals) @ transition_matrix
         Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
         self._mae = mean_absolute_error(self._Y_expected_totals, Y_pred_totals)

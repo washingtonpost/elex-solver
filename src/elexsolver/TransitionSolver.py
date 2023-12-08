@@ -30,7 +30,7 @@ class TransitionSolver(ABC):
     def __init__(self):
         self._mae = None
 
-    def fit_predict(self, X: np.ndarray, Y: np.ndarray):
+    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         raise NotImplementedError
 
     def get_prediction_interval(self, pi: float):
@@ -86,3 +86,17 @@ class TransitionSolver(ABC):
         for col in A.columns:
             A[col] /= A[col].sum()
         return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
+
+    def _check_and_prepare_weights(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None):
+        if weights is not None:
+            if len(weights) != X.shape[0] and len(weights) != Y.shape[0]:
+                raise ValueError("weights must be the same length as the number of rows in X and Y.")
+            if isinstance(weights, list):
+                weights = np.array(weights).copy()
+            elif not isinstance(weights, np.ndarray):
+                # pandas.Series
+                weights = weights.values.copy()
+        else:
+            weights = np.ones((Y.shape[0],))
+
+        return np.diag(np.sqrt(weights.flatten() / weights.sum()))
