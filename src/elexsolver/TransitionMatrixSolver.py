@@ -95,8 +95,9 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         splits = [0] + [rng.random() for _ in range(0, n - 1)] + [1]
         splits.sort()
         diffs = [x - splits[i - 1] for (i, x) in enumerate(splits)][1:]
-        result = map(lambda x: x * M, diffs)
-        return list(result)
+        result = list(map(lambda x: x * M, diffs))
+        rng.shuffle(result)
+        return result
 
     def fit_predict(self, X, Y):
         tm = TransitionMatrixSolver(strict=self._strict)
