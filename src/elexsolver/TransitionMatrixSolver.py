@@ -14,8 +14,15 @@ LOG = logging.getLogger(__name__)
 class TransitionMatrixSolver(TransitionSolver):
     def __init__(self, strict=True):
         super().__init__()
-        self._transition_matrix = None
         self._strict = strict
+
+        # class members that are instantiated during model-fit
+        # for bootstrapping
+        self._residuals = None
+        self._X = None
+        self._Y = None
+        self._X_expected_totals = None
+        self._Y_expected_totals = None
 
     @staticmethod
     def __get_constraint(coef, strict):
@@ -23,7 +30,7 @@ class TransitionMatrixSolver(TransitionSolver):
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
-    def __solve(self, A, B):
+    def _solve(self, A, B):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
         loss_function = cp.norm(A @ transition_matrix - B, "fro")
         objective = cp.Minimize(loss_function)
@@ -57,16 +64,41 @@ class TransitionMatrixSolver(TransitionSolver):
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
 
-        X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
-        Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
+        self._X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
+        self._Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
 
-        X = self._rescale(X.T).T
-        Y = self._rescale(Y.T).T
+        self._X = self._rescale(X.T).T
+        self._Y = self._rescale(Y.T).T
 
-        self._transition_matrix = self.__solve(X, Y)
-        transitions = np.diag(X_expected_totals) @ self._transition_matrix
+        transition_matrix = self._solve(self._X, self._Y)
+        transitions = np.diag(self._X_expected_totals) @ transition_matrix
         Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
-        self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
+        self._mae = mean_absolute_error(self._Y_expected_totals, Y_pred_totals)
         LOG.info("MAE = %s", np.around(self._mae, 4))
+        self._residuals = Y_pred_totals - self._Y_expected_totals
 
         return transitions
+
+
+class BootstrapTransitionMatrixSolver(TransitionSolver):
+    def __init__(self, B=1, strict=True):
+        super().__init__()
+        self._strict = strict
+
+    def fit_predict(self, X, Y):
+        tm = TransitionMatrixSolver(strict=self._strict)
+        _ = tm.fit_predict(X, Y)
+
+        from sklearn.utils import resample  # to be replaced
+
+        residuals_hat = resample(tm._residuals, replace=True, random_state=1024)
+        Y_hat = tm._Y.copy()
+        for j in range(0, Y_hat.shape[1]):
+            Y_hat[:, j] = Y_hat[:, j] + (residuals_hat[j] / len(Y_hat))
+
+        transition_matrix_hat = tm._solve(tm._X, Y_hat)
+        transitions_hat = np.diag(tm._X_expected_totals) @ transition_matrix_hat
+        Y_pred_totals = np.sum(transitions_hat, axis=0) / np.sum(transitions_hat, axis=0).sum()
+        self._mae = mean_absolute_error(tm._Y_expected_totals, Y_pred_totals)
+        LOG.info("MAE = %s", np.around(self._mae, 4))
+        return transitions_hat
