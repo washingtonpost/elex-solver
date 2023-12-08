@@ -37,7 +37,7 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = None
         self._X_totals = None
 
-    def fit_predict(self, X, Y):
+    def fit_predict(self, X, Y, weights=None):
         """
         X and Y are matrixes of integers.
         """
@@ -61,26 +61,21 @@ class EITransitionSolver(TransitionSolver):
         self._check_for_zero_units(X)
         self._check_for_zero_units(Y)
 
-        # but for this solver, we need our matrices to be (things x units)
-        X = X.T
-        Y = Y.T
+        self._X_totals = X.sum(axis=0) / X.sum(axis=0).sum()
+        Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
+        n = Y.sum(axis=1)
 
-        self._X_totals = X.sum(axis=1) / X.sum(axis=1).sum()
-        Y_expected_totals = Y.sum(axis=1) / Y.sum(axis=1).sum()
-        n = Y.sum(axis=0)
-
-        X = self._rescale(X)
-        Y = self._rescale(Y)
+        X = self._rescale(X.T).T
+        Y = self._rescale(Y.T).T
 
         num_units = len(n)  # should be the same as the number of units in Y
-        num_rows = X.shape[0]  # number of things in X that are being transitioned "from"
-        num_cols = Y.shape[0]  # number of things in Y that are being transitioned "to"
+        num_rows = X.shape[1]  # number of things in X that are being transitioned "from"
+        num_cols = Y.shape[1]  # number of things in Y that are being transitioned "to"
 
         # reshaping and rounding
-        Y_obs = np.transpose(Y * n).round()
+        Y_obs = (Y.T * n).round()
         X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
-        X_extended = np.swapaxes(X_extended, 0, 1)
 
         with pm.Model(check_bounds=False) as model:
             conc_params = pm.HalfNormal("conc_params", sigma=self._sigma, shape=(num_rows, num_cols))
@@ -90,7 +85,7 @@ class EITransitionSolver(TransitionSolver):
                 "result_fractions",
                 n=n,
                 p=theta,
-                observed=Y_obs,
+                observed=Y_obs.T,
                 shape=(num_units, num_cols),
             )
             try:
@@ -110,9 +105,9 @@ class EITransitionSolver(TransitionSolver):
         b_values = np.transpose(
             model_trace["posterior"]["beta"].stack(all_draws=["chain", "draw"]).values, axes=(3, 0, 1, 2)
         )
-        samples_converted = np.transpose(b_values, axes=(3, 0, 1, 2)) * X.T.values
+        samples_converted = np.transpose(b_values, axes=(3, 0, 1, 2)) * X.values
         samples_summed_across = samples_converted.sum(axis=2)
-        self._sampled = np.transpose(samples_summed_across / X.T.sum(axis=0).values, axes=(1, 2, 0))
+        self._sampled = np.transpose(samples_summed_across / X.sum(axis=0).values, axes=(1, 2, 0))
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
         transitions = self._get_transitions(posterior_mean_rxc)
