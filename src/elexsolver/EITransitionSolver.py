@@ -64,16 +64,12 @@ class EITransitionSolver(TransitionSolver):
         Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
         n = Y.sum(axis=1)
 
-        X = self._rescale(X)
-        Y_obs = Y.copy()
-        Y = self._rescale(Y)
-
         num_units = len(n)  # should be the same as the number of units in Y
         num_rows = X.shape[1]  # number of things in X that are being transitioned "from"
         num_cols = Y.shape[1]  # number of things in Y that are being transitioned "to"
 
-        # reshaping and rounding
-        Y_obs = Y_obs.round()
+        # rescaling and reshaping
+        X = self._rescale(X)
         X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
 
@@ -85,7 +81,7 @@ class EITransitionSolver(TransitionSolver):
                 "result_fractions",
                 n=n,
                 p=theta,
-                observed=Y_obs,
+                observed=Y,
                 shape=(num_units, num_cols),
             )
             try:
