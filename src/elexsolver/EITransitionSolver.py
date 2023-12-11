@@ -46,8 +46,7 @@ class EITransitionSolver(TransitionSolver):
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
 
-        # first, ensure matrices are (units x things), where the number of units is > the number of things
-        # this will allow us to re-use some of the same checks we use for all other solvers
+        # matrices should be (units x things), where the number of units is > the number of things
         if X.shape[1] > X.shape[0]:
             X = X.T
         if Y.shape[1] > Y.shape[0]:
@@ -65,15 +64,16 @@ class EITransitionSolver(TransitionSolver):
         Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
         n = Y.sum(axis=1)
 
-        X = self._rescale(X.T).T
-        Y = self._rescale(Y.T).T
+        X = self._rescale(X)
+        Y_obs = Y.copy()
+        Y = self._rescale(Y)
 
         num_units = len(n)  # should be the same as the number of units in Y
         num_rows = X.shape[1]  # number of things in X that are being transitioned "from"
         num_cols = Y.shape[1]  # number of things in Y that are being transitioned "to"
 
         # reshaping and rounding
-        Y_obs = (Y.T * n).round()
+        Y_obs = Y_obs.round()
         X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
 
@@ -85,7 +85,7 @@ class EITransitionSolver(TransitionSolver):
                 "result_fractions",
                 n=n,
                 p=theta,
-                observed=Y_obs.T,
+                observed=Y_obs,
                 shape=(num_units, num_cols),
             )
             try:
@@ -105,9 +105,9 @@ class EITransitionSolver(TransitionSolver):
         b_values = np.transpose(
             model_trace["posterior"]["beta"].stack(all_draws=["chain", "draw"]).values, axes=(3, 0, 1, 2)
         )
-        samples_converted = np.transpose(b_values, axes=(3, 0, 1, 2)) * X.values
+        samples_converted = np.transpose(b_values, axes=(3, 0, 1, 2)) * X
         samples_summed_across = samples_converted.sum(axis=2)
-        self._sampled = np.transpose(samples_summed_across / X.sum(axis=0).values, axes=(1, 2, 0))
+        self._sampled = np.transpose(samples_summed_across / X.sum(axis=0), axes=(1, 2, 0))
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
         transitions = self._get_transitions(posterior_mean_rxc)

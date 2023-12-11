@@ -70,8 +70,8 @@ class TransitionMatrixSolver(TransitionSolver):
         self._X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
         self._Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
 
-        self._X = self._rescale(X.T).T
-        self._Y = self._rescale(Y.T).T
+        self._X = self._rescale(X)
+        self._Y = self._rescale(Y)
 
         weights = self._check_and_prepare_weights(self._X, self._Y, weights)
 

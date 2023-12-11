@@ -68,24 +68,15 @@ class TransitionSolver(ABC):
 
     def _rescale(self, A: np.ndarray):
         """
-        Rescale columns (things) to ensure they sum to 1 (100%).
+        Rescale rows (units) to ensure they sum to 1 (100%).
         """
         A = A.copy().astype(float)
 
-        if isinstance(A, np.ndarray):
-            with warnings.catch_warnings():
-                # Zeros are completely ok here;
-                # means the thing (e.g. candidate) received zero votes.
-                warnings.filterwarnings(
-                    "ignore", category=RuntimeWarning, message="invalid value encountered in divide"
-                )
-                for j in range(0, A.shape[1]):
-                    A[:, j] = A[:, j] / A[:, j].sum()
-                return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
-        # pandas.DataFrame()
-        for col in A.columns:
-            A[col] /= A[col].sum()
-        return A.fillna(0).replace(np.inf, 0).replace(-np.inf, 0)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in divide")
+            A = (A.T / A.sum(axis=1)).T
+
+        return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
 
     def _check_and_prepare_weights(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None):
         if weights is not None:
