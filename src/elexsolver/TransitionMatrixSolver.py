@@ -94,6 +94,9 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             X = X.to_numpy()
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
+        # assuming pandas.Series
+        if weights is not None and not isinstance(weights, np.ndarray):
+            weights = weights.values
 
         tm = TransitionMatrixSolver(strict=self._strict)
         predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
