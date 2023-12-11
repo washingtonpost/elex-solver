@@ -16,21 +16,13 @@ class TransitionMatrixSolver(TransitionSolver):
         super().__init__()
         self._strict = strict
 
-        # class members that are instantiated during model-fit
-        # for bootstrapping
-        self._residuals = None
-        self._X = None
-        self._Y = None
-        self._X_expected_totals = None
-        self._Y_expected_totals = None
-
     @staticmethod
     def __get_constraint(coef, strict):
         if strict:
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
-    def _solve(self, A, B, weights):
+    def __solve(self, A, B, weights):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
         Aw = np.dot(weights, A)
         Bw = np.dot(weights, B)
@@ -57,6 +49,9 @@ class TransitionMatrixSolver(TransitionSolver):
         if Y.shape[1] > Y.shape[0]:
             Y = Y.T
 
+        if X.shape[0] != Y.shape[0]:
+            raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
+
         self._check_dimensions(X)
         self._check_dimensions(Y)
         self._check_for_zero_units(X)
@@ -67,20 +62,19 @@ class TransitionMatrixSolver(TransitionSolver):
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
 
-        self._X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
-        self._Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
+        X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
+        Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
 
-        self._X = self._rescale(X)
-        self._Y = self._rescale(Y)
+        X = self._rescale(X)
+        Y = self._rescale(Y)
 
-        weights = self._check_and_prepare_weights(self._X, self._Y, weights)
+        weights = self._check_and_prepare_weights(X, Y, weights)
 
-        transition_matrix = self._solve(self._X, self._Y, weights)
-        transitions = np.diag(self._X_expected_totals) @ transition_matrix
+        transition_matrix = self.__solve(X, Y, weights)
+        transitions = np.diag(X_expected_totals) @ transition_matrix
         Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
-        self._mae = mean_absolute_error(self._Y_expected_totals, Y_pred_totals)
+        self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
         LOG.info("MAE = %s", np.around(self._mae, 4))
-        self._residuals = Y_pred_totals - self._Y_expected_totals
 
         return transitions
 
@@ -91,42 +85,39 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._strict = strict
         self._B = B
 
-    def _constrained_random_numbers(self, n, M, seed=None):
-        """
-        Generate n random numbers that sum to M.
-        Based on: https://stackoverflow.com/a/30659457/224912
-        """
-        rng = np.random.default_rng(seed=seed)
-        splits = [0] + [rng.random() for _ in range(0, n - 1)] + [1]
-        splits.sort()
-        diffs = [x - splits[i - 1] for (i, x) in enumerate(splits)][1:]
-        result = list(map(lambda x: x * M, diffs))
-        rng.shuffle(result)
-        return result
+    def fit_predict(self, X, Y, weights=None):
+        maes = []
+        predicted_transitions = []
 
-    def fit_predict(self, X, Y):
+        # assuming pandas.DataFrame
+        if not isinstance(X, np.ndarray):
+            X = X.to_numpy()
+        if not isinstance(Y, np.ndarray):
+            Y = Y.to_numpy()
+
         tm = TransitionMatrixSolver(strict=self._strict)
-        transitions = tm.fit_predict(X, Y)
+        predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
+        maes.append(tm.MAE)
 
         from sklearn.utils import resample  # to be replaced
 
-        maes = []
-
-        for b in range(0, self._B):
-            residuals_hat = resample(tm._residuals, replace=True, random_state=b)
-            Y_hat = tm._Y.copy()
-            for j in range(0, Y_hat.shape[1]):
-                residuals_j = self._constrained_random_numbers(len(Y_hat), residuals_hat[j], seed=j)
-                Y_hat[:, j] = Y_hat[:, j] + residuals_j
-
-            transition_matrix_hat = tm._solve(tm._X, Y_hat)
-            transitions_hat = np.diag(tm._X_expected_totals) @ transition_matrix_hat
-            transitions = transitions + transitions_hat
-
-            Y_pred_totals = np.sum(transitions_hat, axis=0) / np.sum(transitions_hat, axis=0).sum()
-            this_mae = mean_absolute_error(tm._Y_expected_totals, Y_pred_totals)
-            maes.append(this_mae)
-            LOG.info("MAE = %s", np.around(this_mae, 4))
+        for b in range(0, self._B - 1):
+            X_resampled = []
+            Y_resampled = []
+            weights_resampled = []
+            for i in resample(range(0, len(X)), replace=True, random_state=b):
+                X_resampled.append(X[i])
+                Y_resampled.append(Y[i])
+                if weights is not None:
+                    weights_resampled.append(weights[i])
+            if weights is None:
+                weights_resampled = None
+            else:
+                weights_resampled = np.array(weights_resampled)
+            predicted_transitions.append(
+                tm.fit_predict(np.array(X_resampled), np.array(Y_resampled), weights=weights_resampled)
+            )
+            maes.append(tm.MAE)
 
         self._mae = np.mean(maes)
-        return transitions / self._B
+        return np.mean(predicted_transitions, axis=0)
