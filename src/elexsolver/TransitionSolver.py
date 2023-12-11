@@ -87,7 +87,6 @@ class TransitionSolver(ABC):
             elif not isinstance(weights, np.ndarray):
                 # pandas.Series
                 weights = weights.values.copy()
-        else:
-            weights = np.ones((Y.shape[0],))
+            return np.diag(np.sqrt(weights.flatten() / weights.sum()))
 
-        return np.diag(np.sqrt(weights.flatten() / weights.sum()))
+        return np.diag(np.ones((Y.shape[0],)))
