@@ -63,6 +63,7 @@ class EITransitionSolver(TransitionSolver):
         self._X_totals = X.sum(axis=0) / X.sum(axis=0).sum()
         Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
         n = Y.sum(axis=1)
+        weights = self._check_and_prepare_weights(X, Y, weights)
 
         num_units = len(n)  # should be the same as the number of units in Y
         num_rows = X.shape[1]  # number of things in X that are being transitioned "from"
@@ -70,13 +71,13 @@ class EITransitionSolver(TransitionSolver):
 
         # rescaling and reshaping
         X = self._rescale(X)
-        X_extended = np.expand_dims(X, axis=2)
+        X_extended = np.expand_dims(np.dot(weights, X), axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
 
         with pm.Model(check_bounds=False) as model:
             conc_params = pm.HalfNormal("conc_params", sigma=self._sigma, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
-            theta = (X_extended * beta).sum(axis=1)
+            theta = pm.math.dot(weights, (X_extended * beta).sum(axis=1))
             pm.Multinomial(
                 "result_fractions",
                 n=n,
