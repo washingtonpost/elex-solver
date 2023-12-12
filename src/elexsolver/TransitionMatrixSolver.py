@@ -2,6 +2,8 @@ import logging
 
 import cvxpy as cp
 import numpy as np
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from elexsolver.logging import initialize_logging
 from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
@@ -12,9 +14,10 @@ LOG = logging.getLogger(__name__)
 
 
 class TransitionMatrixSolver(TransitionSolver):
-    def __init__(self, strict=True):
+    def __init__(self, strict=True, verbose=True):
         super().__init__()
         self._strict = strict
+        self._verbose = verbose
 
     @staticmethod
     def __get_constraint(coef, strict):
@@ -74,7 +77,8 @@ class TransitionMatrixSolver(TransitionSolver):
         transitions = np.diag(X_expected_totals) @ transition_matrix
         Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
         self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
-        LOG.info("MAE = %s", np.around(self._mae, 4))
+        if self._verbose:
+            LOG.info("MAE = %s", np.around(self._mae, 4))
 
         return transitions
 
@@ -98,29 +102,31 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         if weights is not None and not isinstance(weights, np.ndarray):
             weights = weights.values
 
-        tm = TransitionMatrixSolver(strict=self._strict)
+        tm = TransitionMatrixSolver(strict=self._strict, verbose=False)
         predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
         maes.append(tm.MAE)
 
         from sklearn.utils import resample  # to be replaced
 
-        for b in range(0, self._B - 1):
-            X_resampled = []
-            Y_resampled = []
-            weights_resampled = []
-            for i in resample(range(0, len(X)), replace=True, random_state=b):
-                X_resampled.append(X[i])
-                Y_resampled.append(Y[i])
-                if weights is not None:
-                    weights_resampled.append(weights[i])
-            if weights is None:
-                weights_resampled = None
-            else:
-                weights_resampled = np.array(weights_resampled)
-            predicted_transitions.append(
-                tm.fit_predict(np.array(X_resampled), np.array(Y_resampled), weights=weights_resampled)
-            )
-            maes.append(tm.MAE)
+        with logging_redirect_tqdm(loggers=[LOG]):
+            for b in tqdm(range(0, self._B - 1), desc="Bootstrapping"):
+                X_resampled = []
+                Y_resampled = []
+                weights_resampled = []
+                for i in resample(range(0, len(X)), replace=True, random_state=b):
+                    X_resampled.append(X[i])
+                    Y_resampled.append(Y[i])
+                    if weights is not None:
+                        weights_resampled.append(weights[i])
+                if weights is None:
+                    weights_resampled = None
+                else:
+                    weights_resampled = np.array(weights_resampled)
+                predicted_transitions.append(
+                    tm.fit_predict(np.array(X_resampled), np.array(Y_resampled), weights=weights_resampled)
+                )
+                maes.append(tm.MAE)
 
         self._mae = np.mean(maes)
+        LOG.info("MAE = %s", np.around(self._mae, 4))
         return np.mean(predicted_transitions, axis=0)
