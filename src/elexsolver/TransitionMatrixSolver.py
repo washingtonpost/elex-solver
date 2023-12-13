@@ -121,11 +121,9 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             X_resampled = rng.choice(
                 X, len(X), replace=True, axis=0, p=(weights / weights.sum() if weights is not None else None)
             )
-            Y_resampled = []
-            for x in X_resampled:
-                index = np.where((X == x).all(axis=1))[0][0]
-                Y_resampled.append(Y[index])
-            predicted_transitions.append(tm.fit_predict(X_resampled, np.array(Y_resampled), weights=None))
+            indices = [np.where((X == x).all(axis=1))[0][0] for x in X_resampled]
+            Y_resampled = Y[indices]
+            predicted_transitions.append(tm.fit_predict(X_resampled, Y_resampled, weights=None))
             maes.append(tm.MAE)
 
         self._mae = np.mean(maes)
