@@ -40,6 +40,7 @@ class EITransitionSolver(TransitionSolver):
     def fit_predict(self, X, Y, weights=None):
         """
         X and Y are matrixes of integers.
+        NOTE: weighting is not currently implemented.
         """
         self._check_data_type(X)
         self._check_data_type(Y)
@@ -63,7 +64,6 @@ class EITransitionSolver(TransitionSolver):
         self._X_totals = X.sum(axis=0) / X.sum(axis=0).sum()
         Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
         n = Y.sum(axis=1)
-        weights = self._check_and_prepare_weights(X, Y, weights)
 
         num_units = len(n)  # should be the same as the number of units in Y
         num_rows = X.shape[1]  # number of things in X that are being transitioned "from"
@@ -71,13 +71,13 @@ class EITransitionSolver(TransitionSolver):
 
         # rescaling and reshaping
         X = self._rescale(X)
-        X_extended = np.expand_dims(np.dot(weights, X), axis=2)
+        X_extended = np.expand_dims(X, axis=2)
         X_extended = np.repeat(X_extended, num_cols, axis=2)
 
         with pm.Model(check_bounds=False) as model:
             conc_params = pm.HalfNormal("conc_params", sigma=self._sigma, shape=(num_rows, num_cols))
             beta = pm.Dirichlet("beta", a=conc_params, shape=(num_units, num_rows, num_cols))
-            theta = pm.math.dot(weights, (X_extended * beta).sum(axis=1))
+            theta = (X_extended * beta).sum(axis=1)
             pm.Multinomial(
                 "result_fractions",
                 n=n,
@@ -120,17 +120,14 @@ class EITransitionSolver(TransitionSolver):
             transitions.append(col * self._X_totals)
         return np.array(transitions).T
 
-    def get_prediction_interval(self, pi):
-        """
-        Note: this is actually a credible interval, not a prediction interval.
-        """
-        if pi <= 1:
-            pi = pi * 100
-        if pi < 0 or pi > 100:
-            raise ValueError(f"Invalid prediction interval {pi}.")
+    def get_credible_interval(self, ci):
+        if ci <= 1:
+            ci = ci * 100
+        if ci < 0 or ci > 100:
+            raise ValueError(f"Invalid prediction interval {ci}.")
 
-        lower = (100 - pi) / 2
-        upper = pi + lower
+        lower = (100 - ci) / 2
+        upper = ci + lower
         A_dict = {
             lower: np.zeros((self._sampled.shape[1], self._sampled.shape[2])),
             upper: np.zeros((self._sampled.shape[1], self._sampled.shape[2])),
