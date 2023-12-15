@@ -97,10 +97,11 @@ class TransitionMatrixSolver(TransitionSolver):
 
 
 class BootstrapTransitionMatrixSolver(TransitionSolver):
-    def __init__(self, B=1000, strict=True):
+    def __init__(self, B=1000, strict=True, verbose=True):
         super().__init__()
         self._strict = strict
         self._B = B
+        self._verbose = verbose
 
         # class members that are instantiated during model-fit
         self._predicted_transitions = None
@@ -119,7 +120,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
         maes.append(tm.MAE)
 
-        for b in tqdm(range(0, self._B - 1), desc="Bootstrapping"):
+        for b in tqdm(range(0, self._B - 1), desc="Bootstrapping", disable=not (self._verbose)):
             rng = np.random.default_rng(seed=b)
             X_resampled = rng.choice(
                 X, len(X), replace=True, axis=0, p=(weights / weights.sum() if weights is not None else None)
