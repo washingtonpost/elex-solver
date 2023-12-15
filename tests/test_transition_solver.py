@@ -112,7 +112,7 @@ def test_rescale_rescaled_pandas():
     a_df = pandas.DataFrame(np.ones((2, 2)), columns=["A", "B"]).astype(int)
     expected_df = pandas.DataFrame([[0.5, 0.5], [0.5, 0.5]], columns=["A", "B"])
     ts = TransitionSolver()
-    np.testing.assert_array_equal(ts._rescale(a_df), expected_df)  # pylint: disable=protected-access
+    np.testing.assert_array_equal(expected_df, ts._rescale(a_df))  # pylint: disable=protected-access
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
@@ -128,3 +128,36 @@ def test_check_data_type_bad():
         A = np.array([[0.1, 0.2, 0.3]])
         ts = TransitionSolver()
         ts._check_data_type(A)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_and_prepare_weights_bad():
+    with pytest.raises(ValueError):
+        weights = [1, 2]
+        A = np.array([[1, 2], [3, 4], [5, 6]])
+        B = A.copy()
+        ts = TransitionSolver()
+        ts._check_and_prepare_weights(A, B, weights)  # pylint: disable=protected-access
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_and_prepare_weights_none():
+    A = np.array([[1, 2], [3, 4], [5, 6]])
+    B = A.copy()
+    expected = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+    ts = TransitionSolver()
+    current = ts._check_and_prepare_weights(A, B, None)  # pylint: disable=protected-access
+    np.testing.assert_array_equal(expected, current)
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_and_prepare_weights_with_weights():
+    A = np.array([[1, 2, 3], [4, 5, 6]])
+    B = A.copy()
+    weights = np.array([0.6, 0.4])
+    expected = np.array([[0.77459667, 0], [0, 0.63245553]])
+
+    ts = TransitionSolver()
+    current = ts._check_and_prepare_weights(A, B, weights)  # pylint: disable=protected-access
+    np.testing.assert_allclose(expected, current)
