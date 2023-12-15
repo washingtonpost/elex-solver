@@ -124,7 +124,7 @@ class EITransitionSolver(TransitionSolver):
         if ci <= 1:
             ci = ci * 100
         if ci < 0 or ci > 100:
-            raise ValueError(f"Invalid prediction interval {ci}.")
+            raise ValueError(f"Invalid credible interval {ci}.")
 
         lower = (100 - ci) / 2
         upper = ci + lower
