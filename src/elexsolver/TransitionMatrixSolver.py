@@ -20,7 +20,7 @@ class TransitionMatrixSolver(TransitionSolver):
         self._verbose = verbose
 
     @staticmethod
-    def __get_constraint(coef, strict):
+    def __get_constraints(coef, strict):
         if strict:
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
@@ -31,8 +31,8 @@ class TransitionMatrixSolver(TransitionSolver):
         Bw = np.dot(weights, B)
         loss_function = cp.norm(Aw @ transition_matrix - Bw, "fro")
         objective = cp.Minimize(loss_function)
-        constraint = TransitionMatrixSolver.__get_constraint(transition_matrix, self._strict)
-        problem = cp.Problem(objective, constraint)
+        constraints = TransitionMatrixSolver.__get_constraints(transition_matrix, self._strict)
+        problem = cp.Problem(objective, constraints)
 
         with warnings.catch_warnings():
             warnings.simplefilter("error")
