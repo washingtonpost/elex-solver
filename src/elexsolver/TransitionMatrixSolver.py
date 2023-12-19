@@ -116,11 +116,12 @@ class TransitionMatrixSolver(TransitionSolver):
 
 
 class BootstrapTransitionMatrixSolver(TransitionSolver):
-    def __init__(self, B=1000, strict=True, verbose=True):
+    def __init__(self, B=1000, strict=True, verbose=True, lam=None):
         super().__init__()
         self._strict = strict
         self._B = B
         self._verbose = verbose
+        self._lambda = lam
 
         # class members that are instantiated during model-fit
         self._predicted_transitions = None
@@ -135,7 +136,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
 
-        tm = TransitionMatrixSolver(strict=self._strict, verbose=False)
+        tm = TransitionMatrixSolver(strict=self._strict, verbose=False, lam=self._lambda)
         self._predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
         maes.append(tm.MAE)
 
