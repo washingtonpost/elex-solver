@@ -14,10 +14,14 @@ LOG = logging.getLogger(__name__)
 
 
 class TransitionMatrixSolver(TransitionSolver):
-    def __init__(self, strict=True, verbose=True):
+    def __init__(self, strict=True, verbose=True, lam=None):
+        """
+        `lam` > 0 will enable L2 regularization (Ridge).
+        """
         super().__init__()
         self._strict = strict
         self._verbose = verbose
+        self._lambda = lam
 
     @staticmethod
     def __get_constraints(coef, strict):
@@ -25,12 +29,27 @@ class TransitionMatrixSolver(TransitionSolver):
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
+    def __standard_objective(self, A, B, beta):
+        loss_function = cp.norm(A @ beta - B, "fro")
+        return cp.Minimize(loss_function)
+
+    def __ridge_objective(self, A, B, beta):
+        # Based on https://www.cvxpy.org/examples/machine_learning/ridge_regression.html
+        lam = cp.Parameter(nonneg=True, value=self._lambda)
+        loss_function = cp.pnorm(A @ beta - B, p=2) ** 2
+        regularizer = cp.pnorm(beta, p=2) ** 2
+        return cp.Minimize(loss_function + lam * regularizer)
+
     def __solve(self, A, B, weights):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
         Aw = np.dot(weights, A)
         Bw = np.dot(weights, B)
-        loss_function = cp.norm(Aw @ transition_matrix - Bw, "fro")
-        objective = cp.Minimize(loss_function)
+
+        if self._lambda is None or self._lambda == 0:
+            objective = self.__standard_objective(Aw, Bw, transition_matrix)
+        else:
+            objective = self.__ridge_objective(Aw, Bw, transition_matrix)
+
         constraints = TransitionMatrixSolver.__get_constraints(transition_matrix, self._strict)
         problem = cp.Problem(objective, constraints)
 
