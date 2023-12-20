@@ -107,20 +107,20 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = np.transpose(samples_summed_across / X.sum(axis=0), axes=(1, 2, 0))
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
-        transitions = self._get_transitions(posterior_mean_rxc)
-        Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
+        self._transitions = self._get_transitions(posterior_mean_rxc)
+        Y_pred_totals = np.sum(self._transitions, axis=0) / np.sum(self._transitions, axis=0).sum()
         self._mae = mean_absolute_error(Y_pred_totals, Y_expected_totals)
         LOG.info("MAE = %s", np.around(self._mae, 4))
-        return transitions
+        return posterior_mean_rxc
 
     def _get_transitions(self, A: np.ndarray):
-        # to go from inferences to transitions
+        # to go from inferred percentages to transitions
         transitions = []
         for col in A.T:
             transitions.append(col * self._X_totals)
         return np.array(transitions).T
 
-    def get_credible_interval(self, ci):
+    def get_credible_interval(self, ci, transitions=False):
         if ci <= 1:
             ci = ci * 100
         if ci < 0 or ci > 100:
@@ -138,4 +138,6 @@ class EITransitionSolver(TransitionSolver):
                 for j in range(0, self._sampled.shape[2]):
                     A_dict[ci][i][j] = np.percentile(self._sampled[:, i, j], ci)
 
-        return (self._get_transitions(A_dict[lower]), self._get_transitions(A_dict[upper]))
+        if transitions:
+            return (self._get_transitions(A_dict[lower]), self._get_transitions(A_dict[upper]))
+        return (A_dict[lower], A_dict[upper])

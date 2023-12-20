@@ -29,12 +29,17 @@ class TransitionSolver(ABC):
 
     def __init__(self):
         self._mae = None
+        self._transitions = None
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         raise NotImplementedError
 
     def get_prediction_interval(self, pi: float):
         raise NotImplementedError
+
+    @property
+    def transitions(self):
+        return self._transitions
 
     @property
     def MAE(self):

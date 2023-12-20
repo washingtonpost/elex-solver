@@ -27,7 +27,7 @@ def test_matrix_fit_predict():
         ]
     )
 
-    expected = np.array([[0.35096678, 0.11057168], [0.11665334, 0.4218082]])
+    expected = np.array([[0.760428, 0.239572], [0.216642, 0.783358]])
 
     tms = TransitionMatrixSolver()
     current = tms.fit_predict(X, Y)
@@ -59,7 +59,7 @@ def test_matrix_fit_predict_with_weights():
 
     weights = np.array([500, 250, 125, 62.5, 31.25, 15.625])
 
-    expected = np.array([[0.340306, 0.121233], [0.124163, 0.414298]])
+    expected = np.array([[0.737329, 0.262671], [0.230589, 0.769411]])
 
     tms = TransitionMatrixSolver()
     current = tms.fit_predict(X, Y, weights=weights)
@@ -95,7 +95,7 @@ def test_bootstrap_fit_predict():
         ]
     )
 
-    expected = np.array([[0.374623, 0.087791], [0.093755, 0.44383]])
+    expected = np.array([[0.809393, 0.190607], [0.173843, 0.826157]])
 
     btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
     current = btms.fit_predict(X, Y)
@@ -127,7 +127,7 @@ def test_bootstrap_fit_predict_with_weights():
 
     weights = np.array([500, 250, 125, 62.5, 31.25, 15.625])
 
-    expected = np.array([[0.319791, 0.112347], [0.130296, 0.437565]])
+    expected = np.array([[0.739798, 0.260202], [0.229358, 0.770642]])
 
     btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
     current = btms.fit_predict(X, Y, weights=weights)
@@ -157,8 +157,8 @@ def test_bootstrap_confidence_interval():
         ]
     )
 
-    expected_lower = np.array([[0.34326, 0.045649], [0.047865, 0.418057]])
-    expected_upper = np.array([[0.429978, 0.112171], [0.119081, 0.477393]])
+    expected_lower = np.array([[0.757573, 0.095978], [0.09128, 0.779471]])
+    expected_upper = np.array([[0.904022, 0.242427], [0.220529, 0.90872]])
 
     btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
     _ = btms.fit_predict(X, Y)

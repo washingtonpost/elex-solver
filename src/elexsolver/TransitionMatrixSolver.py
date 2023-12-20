@@ -100,11 +100,11 @@ class TransitionMatrixSolver(TransitionSolver):
 
         weights = self._check_and_prepare_weights(X, Y, weights)
 
-        transition_matrix = self.__solve(X, Y, weights)
-        transitions = np.diag(X_expected_totals) @ transition_matrix
+        percentages = self.__solve(X, Y, weights)
+        self._transitions = np.diag(X_expected_totals) @ percentages
 
-        if np.sum(transitions, axis=0).sum() != 0:
-            Y_pred_totals = np.sum(transitions, axis=0) / np.sum(transitions, axis=0).sum()
+        if np.sum(self._transitions, axis=0).sum() != 0:
+            Y_pred_totals = np.sum(self._transitions, axis=0) / np.sum(self._transitions, axis=0).sum()
             self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
         else:
             # would have logged an error above
@@ -112,7 +112,7 @@ class TransitionMatrixSolver(TransitionSolver):
         if self._verbose:
             LOG.info("MAE = %s", np.around(self._mae, 4))
 
-        return transitions
+        return percentages
 
 
 class BootstrapTransitionMatrixSolver(TransitionSolver):
@@ -124,11 +124,12 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._lambda = lam
 
         # class members that are instantiated during model-fit
-        self._predicted_transitions = None
+        self._predicted_percentages = None
 
     def fit_predict(self, X, Y, weights=None):
         maes = []
-        self._predicted_transitions = []
+        self._predicted_percentages = []
+        predicted_transitions = []
 
         # assuming pandas.DataFrame
         if not isinstance(X, np.ndarray):
@@ -137,8 +138,9 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             Y = Y.to_numpy()
 
         tm = TransitionMatrixSolver(strict=self._strict, verbose=False, lam=self._lambda)
-        self._predicted_transitions.append(tm.fit_predict(X, Y, weights=weights))
+        self._predicted_percentages.append(tm.fit_predict(X, Y, weights=weights))
         maes.append(tm.MAE)
+        predicted_transitions.append(tm.transitions)
 
         for b in tqdm(range(0, self._B - 1), desc="Bootstrapping", disable=not self._verbose):
             rng = np.random.default_rng(seed=b)
@@ -147,14 +149,17 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             )
             indices = [np.where((X == x).all(axis=1))[0][0] for x in X_resampled]
             Y_resampled = Y[indices]
-            self._predicted_transitions.append(tm.fit_predict(X_resampled, Y_resampled, weights=None))
+            self._predicted_percentages.append(tm.fit_predict(X_resampled, Y_resampled, weights=None))
             maes.append(tm.MAE)
+            predicted_transitions.append(tm.transitions)
 
         self._mae = np.mean(maes)
         LOG.info("MAE = %s", np.around(self._mae, 4))
-        return np.mean(self._predicted_transitions, axis=0)
+        self._transitions = np.mean(predicted_transitions, axis=0)
+        return np.mean(self._predicted_percentages, axis=0)
 
     def get_confidence_interval(self, alpha):
+        # TODO: option to get this in transition form
         if alpha > 1:
             alpha = alpha / 100
         if alpha < 0 or alpha >= 1:
@@ -163,6 +168,6 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         p_lower = ((1.0 - alpha) / 2.0) * 100
         p_upper = ((1.0 + alpha) / 2.0) * 100
         return (
-            np.percentile(self._predicted_transitions, p_lower, axis=0),
-            np.percentile(self._predicted_transitions, p_upper, axis=0),
+            np.percentile(self._predicted_percentages, p_lower, axis=0),
+            np.percentile(self._predicted_percentages, p_upper, axis=0),
         )
