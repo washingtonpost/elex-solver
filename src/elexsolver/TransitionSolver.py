@@ -22,6 +22,17 @@ def mean_absolute_error(Y_expected: np.ndarray, Y_pred: np.ndarray):
     return error_sum / len(absolute_errors)
 
 
+def weighted_absolute_percentage_error(Y_expected: np.ndarray, Y_pred: np.ndarray):
+    if isinstance(Y_expected, list):
+        Y_expected = np.array(Y_expected)
+    if isinstance(Y_pred, list):
+        Y_pred = np.array(Y_pred)
+
+    absolute_errors = np.abs(Y_expected - Y_pred)
+    error_sum = np.sum(absolute_errors)
+    return error_sum / np.sum(Y_expected)
+
+
 class TransitionSolver(ABC):
     """
     Abstract class for (voter) transition solvers.
