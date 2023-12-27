@@ -31,8 +31,6 @@ def weighted_absolute_percentage_error(Y_expected: np.ndarray, Y_pred: np.ndarra
     absolute_errors = np.abs(Y_expected - Y_pred)
     error_sum = np.sum(absolute_errors)
 
-    if np.sum(Y_expected) == 0:
-        return error_sum
     return error_sum / np.sum(Y_expected)
 
 
