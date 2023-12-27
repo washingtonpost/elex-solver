@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from elexsolver.logging import initialize_logging
-from elexsolver.TransitionSolver import TransitionSolver, weighted_absolute_percentage_error
+from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
 
 initialize_logging()
 
@@ -105,12 +105,12 @@ class TransitionMatrixSolver(TransitionSolver):
 
         if np.sum(self._transitions, axis=0).sum() != 0:
             Y_pred_totals = np.sum(self._transitions, axis=0) / np.sum(self._transitions, axis=0).sum()
-            self._wape = weighted_absolute_percentage_error(Y_expected_totals, Y_pred_totals)
+            self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
         else:
             # would have logged an error above
-            self._wape = 1
+            self._mae = 1
         if self._verbose:
-            LOG.info("WAPE = %s", np.around(self._wape, 4))
+            LOG.info("MAE = %s", np.around(self._mae, 4))
 
         return percentages
 
@@ -127,7 +127,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._predicted_percentages = None
 
     def fit_predict(self, X, Y, weights=None):
-        wapes = []
+        maes = []
         self._predicted_percentages = []
         predicted_transitions = []
 
@@ -139,7 +139,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
 
         tm = TransitionMatrixSolver(strict=self._strict, verbose=False, lam=self._lambda)
         self._predicted_percentages.append(tm.fit_predict(X, Y, weights=weights))
-        wapes.append(tm.score)
+        maes.append(tm.score)
         predicted_transitions.append(tm.transitions)
 
         for b in tqdm(range(0, self._B - 1), desc="Bootstrapping", disable=not self._verbose):
@@ -150,11 +150,11 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             indices = [np.where((X == x).all(axis=1))[0][0] for x in X_resampled]
             Y_resampled = Y[indices]
             self._predicted_percentages.append(tm.fit_predict(X_resampled, Y_resampled, weights=None))
-            wapes.append(tm.score)
+            maes.append(tm.score)
             predicted_transitions.append(tm.transitions)
 
-        self._wape = np.mean(wapes)
-        LOG.info("Average WAPE = %s", np.around(self._wape, 4))
+        self._mae = np.mean(maes)
+        LOG.info("Average MAE = %s", np.around(self._mae, 4))
         self._transitions = np.mean(predicted_transitions, axis=0)
         return np.mean(self._predicted_percentages, axis=0)
 

@@ -40,7 +40,7 @@ class TransitionSolver(ABC):
     """
 
     def __init__(self):
-        self._wape = None
+        self._mae = None
         self._transitions = None
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
@@ -55,7 +55,7 @@ class TransitionSolver(ABC):
 
     @property
     def score(self):
-        return self._wape
+        return self._mae
 
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """
