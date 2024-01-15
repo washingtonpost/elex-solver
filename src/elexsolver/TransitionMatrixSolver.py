@@ -6,7 +6,7 @@ import numpy as np
 from tqdm import tqdm
 
 from elexsolver.logging import initialize_logging
-from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
+from elexsolver.TransitionSolver import TransitionSolver
 
 initialize_logging()
 
@@ -14,13 +14,12 @@ LOG = logging.getLogger(__name__)
 
 
 class TransitionMatrixSolver(TransitionSolver):
-    def __init__(self, strict=True, verbose=True, lam=None):
+    def __init__(self, strict=True, lam=None):
         """
         `lam` > 0 will enable L2 regularization (Ridge).
         """
         super().__init__()
         self._strict = strict
-        self._verbose = verbose
         self._lambda = lam
 
     @staticmethod
@@ -93,7 +92,6 @@ class TransitionMatrixSolver(TransitionSolver):
             Y = Y.to_numpy()
 
         X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
-        Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
 
         X = self._rescale(X)
         Y = self._rescale(Y)
@@ -102,16 +100,6 @@ class TransitionMatrixSolver(TransitionSolver):
 
         percentages = self.__solve(X, Y, weights)
         self._transitions = np.diag(X_expected_totals) @ percentages
-
-        if np.sum(self._transitions, axis=0).sum() != 0:
-            Y_pred_totals = np.sum(self._transitions, axis=0) / np.sum(self._transitions, axis=0).sum()
-            self._mae = mean_absolute_error(Y_expected_totals, Y_pred_totals)
-        else:
-            # would have logged an error above
-            self._mae = 1
-        if self._verbose:
-            LOG.info("MAE = %s", np.around(self._mae, 4))
-
         return percentages
 
 
@@ -127,7 +115,6 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._predicted_percentages = None
 
     def fit_predict(self, X, Y, weights=None):
-        maes = []
         self._predicted_percentages = []
         predicted_transitions = []
 
@@ -137,9 +124,8 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
 
-        tm = TransitionMatrixSolver(strict=self._strict, verbose=False, lam=self._lambda)
+        tm = TransitionMatrixSolver(strict=self._strict, lam=self._lambda)
         self._predicted_percentages.append(tm.fit_predict(X, Y, weights=weights))
-        maes.append(tm.score)
         predicted_transitions.append(tm.transitions)
 
         for b in tqdm(range(0, self._B - 1), desc="Bootstrapping", disable=not self._verbose):
@@ -150,11 +136,8 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
             indices = [np.where((X == x).all(axis=1))[0][0] for x in X_resampled]
             Y_resampled = Y[indices]
             self._predicted_percentages.append(tm.fit_predict(X_resampled, Y_resampled, weights=None))
-            maes.append(tm.score)
             predicted_transitions.append(tm.transitions)
 
-        self._mae = np.mean(maes)
-        LOG.info("Average MAE = %s", np.around(self._mae, 4))
         self._transitions = np.mean(predicted_transitions, axis=0)
         return np.mean(self._predicted_percentages, axis=0)
 

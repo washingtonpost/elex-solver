@@ -11,34 +11,12 @@ initialize_logging()
 LOG = logging.getLogger(__name__)
 
 
-def mean_absolute_error(Y_expected: np.ndarray, Y_pred: np.ndarray, weights: np.ndarray | None = None):
-    if isinstance(Y_expected, list):
-        Y_expected = np.array(Y_expected)
-    if isinstance(Y_pred, list):
-        Y_pred = np.array(Y_pred)
-
-    return np.average(np.abs(Y_expected - Y_pred), weights=weights)
-
-
-def weighted_absolute_percentage_error(Y_expected: np.ndarray, Y_pred: np.ndarray):
-    if isinstance(Y_expected, list):
-        Y_expected = np.array(Y_expected)
-    if isinstance(Y_pred, list):
-        Y_pred = np.array(Y_pred)
-
-    absolute_errors = np.abs(Y_expected - Y_pred)
-    error_sum = np.sum(absolute_errors)
-
-    return error_sum / np.sum(Y_expected)
-
-
 class TransitionSolver(ABC):
     """
     Abstract class for (voter) transition solvers.
     """
 
     def __init__(self):
-        self._mae = None
         self._transitions = None
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
@@ -50,10 +28,6 @@ class TransitionSolver(ABC):
     @property
     def transitions(self):
         return self._transitions
-
-    @property
-    def score(self):
-        return self._mae
 
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """

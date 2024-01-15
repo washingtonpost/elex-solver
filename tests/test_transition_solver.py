@@ -3,15 +3,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
-
-
-def test_mean_absolute_error():
-    Y = np.ones((5, 4))
-    Y_pred = Y - 0.02
-    expected = 0.02
-    current = np.around(mean_absolute_error(Y, Y_pred), 6)
-    np.testing.assert_allclose(expected, current)
+from elexsolver.TransitionSolver import TransitionSolver
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())

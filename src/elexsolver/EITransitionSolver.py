@@ -4,7 +4,7 @@ import numpy as np
 import pymc as pm
 
 from elexsolver.logging import initialize_logging
-from elexsolver.TransitionSolver import TransitionSolver, mean_absolute_error
+from elexsolver.TransitionSolver import TransitionSolver
 
 initialize_logging()
 
@@ -62,7 +62,6 @@ class EITransitionSolver(TransitionSolver):
         self._check_for_zero_units(Y)
 
         self._X_totals = X.sum(axis=0) / X.sum(axis=0).sum()
-        Y_expected_totals = Y.sum(axis=0) / Y.sum(axis=0).sum()
         n = Y.sum(axis=1)
 
         num_units = len(n)  # should be the same as the number of units in Y
@@ -108,9 +107,6 @@ class EITransitionSolver(TransitionSolver):
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
         self._transitions = self._get_transitions(posterior_mean_rxc)
-        Y_pred_totals = np.sum(self._transitions, axis=0) / np.sum(self._transitions, axis=0).sum()
-        self._mae = mean_absolute_error(Y_pred_totals, Y_expected_totals)
-        LOG.info("MAE = %s", np.around(self._mae, 4))
         return posterior_mean_rxc
 
     def _get_transitions(self, A: np.ndarray):
