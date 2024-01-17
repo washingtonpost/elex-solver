@@ -157,3 +157,33 @@ def test_check_and_prepare_weights_with_weights():
     ts = TransitionSolver()
     current = ts._check_and_prepare_weights(A, B, weights)  # pylint: disable=protected-access
     np.testing.assert_allclose(expected, current)
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_and_prepare_weights_with_weights_list():
+    A = np.array([[1, 2, 3], [4, 5, 6]])
+    B = A.copy()
+    weights = [0.6, 0.4]
+    expected = np.array([[0.77459667, 0], [0, 0.63245553]])
+
+    ts = TransitionSolver()
+    current = ts._check_and_prepare_weights(A, B, weights)  # pylint: disable=protected-access
+    np.testing.assert_allclose(expected, current)
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_check_and_prepare_weights_with_weights_pandas():
+    try:
+        import pandas  # pylint: disable=import-outside-toplevel
+
+        A = np.array([[1, 2, 3], [4, 5, 6]])
+        B = A.copy()
+        weights = pandas.Series([0.6, 0.4])
+        expected = np.array([[0.77459667, 0], [0, 0.63245553]])
+
+        ts = TransitionSolver()
+        current = ts._check_and_prepare_weights(A, B, weights)  # pylint: disable=protected-access
+        np.testing.assert_allclose(expected, current)
+    except ImportError:
+        # pass this test through since pandas isn't a requirement for elex-solver
+        assert True
