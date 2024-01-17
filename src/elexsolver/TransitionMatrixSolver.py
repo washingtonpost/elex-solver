@@ -23,23 +23,23 @@ class TransitionMatrixSolver(TransitionSolver):
         self._lambda = lam
 
     @staticmethod
-    def __get_constraints(coef, strict):
+    def __get_constraints(coef: np.ndarray, strict: bool):
         if strict:
             return [0 <= coef, coef <= 1, cp.sum(coef, axis=1) == 1]
         return [cp.sum(coef, axis=1) <= 1.1, cp.sum(coef, axis=1) >= 0.9]
 
-    def __standard_objective(self, A, B, beta):
+    def __standard_objective(self, A: np.ndarray, B: np.ndarray, beta: np.ndarray):
         loss_function = cp.norm(A @ beta - B, "fro")
         return cp.Minimize(loss_function)
 
-    def __ridge_objective(self, A, B, beta):
+    def __ridge_objective(self, A: np.ndarray, B: np.ndarray, beta: np.ndarray):
         # Based on https://www.cvxpy.org/examples/machine_learning/ridge_regression.html
         lam = cp.Parameter(nonneg=True, value=self._lambda)
         loss_function = cp.pnorm(A @ beta - B, p=2) ** 2
         regularizer = cp.pnorm(beta, p=2) ** 2
         return cp.Minimize(loss_function + lam * regularizer)
 
-    def __solve(self, A, B, weights):
+    def __solve(self, A: np.ndarray, B: np.ndarray, weights: np.ndarray):
         transition_matrix = cp.Variable((A.shape[1], B.shape[1]), pos=True)
         Aw = np.dot(weights, A)
         Bw = np.dot(weights, B)
@@ -62,10 +62,10 @@ class TransitionMatrixSolver(TransitionSolver):
 
         return transition_matrix.value
 
-    def fit_predict(self, X, Y, weights=None):
+    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         """
-        X and Y are matrixes of integers.
-        weights is a list or numpy array with the same length as both X and Y.
+        X and Y are matrixes (numpy or pandas.DataFrame) of integers.
+        weights is a list, numpy array, or pandas.Series with the same length as both X and Y.
         """
         self._check_data_type(X)
         self._check_data_type(Y)
@@ -104,7 +104,7 @@ class TransitionMatrixSolver(TransitionSolver):
 
 
 class BootstrapTransitionMatrixSolver(TransitionSolver):
-    def __init__(self, B=1000, strict=True, verbose=True, lam=None):
+    def __init__(self, B: int = 1000, strict: bool = True, verbose: bool = True, lam: int | None = None):
         super().__init__()
         self._strict = strict
         self._B = B
@@ -114,7 +114,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         # class members that are instantiated during model-fit
         self._predicted_percentages = None
 
-    def fit_predict(self, X, Y, weights=None):
+    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         self._predicted_percentages = []
         predicted_transitions = []
 
@@ -141,7 +141,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         self._transitions = np.mean(predicted_transitions, axis=0)
         return np.mean(self._predicted_percentages, axis=0)
 
-    def get_confidence_interval(self, alpha):
+    def get_confidence_interval(self, alpha: float):
         # TODO: option to get this in transition form
         if alpha > 1:
             alpha = alpha / 100
