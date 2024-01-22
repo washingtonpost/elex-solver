@@ -129,6 +129,36 @@ def test_ridge_matrix_fit_predict():
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
 
+def test_matrix_fit_predict_pivoted():
+    X = np.array(
+        [
+            [1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8],
+            [9, 10],
+            [11, 12],
+        ]
+    ).T
+
+    Y = np.array(
+        [
+            [2, 3],
+            [4, 5],
+            [6, 7],
+            [8, 9],
+            [10, 11],
+            [12, 13],
+        ]
+    ).T
+
+    expected = np.array([[0.760428, 0.239572], [0.216642, 0.783358]])
+
+    tms = TransitionMatrixSolver()
+    current = tms.fit_predict(X, Y)
+    np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
+
+
 def test_matrix_get_prediction_interval():
     with pytest.raises(NotImplementedError):
         tms = TransitionMatrixSolver()
