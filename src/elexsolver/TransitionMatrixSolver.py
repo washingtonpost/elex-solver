@@ -14,7 +14,7 @@ LOG = logging.getLogger(__name__)
 
 
 class TransitionMatrixSolver(TransitionSolver):
-    def __init__(self, strict=True, lam=None):
+    def __init__(self, strict: bool = True, lam: float | None = None):
         """
         `lam` > 0 will enable L2 regularization (Ridge).
         """
