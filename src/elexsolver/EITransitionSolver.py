@@ -25,7 +25,7 @@ class EITransitionSolver(TransitionSolver):
     Statistica Neerlandica, 55, Pp. 134–156. Copy at https://tinyurl.com/yajkae6n
     """
 
-    def __init__(self, sigma=1, sampling_chains=2, random_seed=None, n_samples=300):
+    def __init__(self, sigma: int = 1, sampling_chains: int = 2, random_seed: int | None = None, n_samples: int = 300):
         super().__init__()
         self._sigma = sigma
         self._chains = int(sampling_chains)
@@ -37,7 +37,7 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = None
         self._X_totals = None
 
-    def fit_predict(self, X, Y, weights=None):
+    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         """
         X and Y are matrixes of integers.
         NOTE: weighting is not currently implemented.
@@ -116,7 +116,7 @@ class EITransitionSolver(TransitionSolver):
             transitions.append(col * self._X_totals)
         return np.array(transitions).T
 
-    def get_credible_interval(self, ci, transitions=False):
+    def get_credible_interval(self, ci: float, transitions: bool = False):
         if ci <= 1:
             ci = ci * 100
         if ci < 0 or ci > 100:
