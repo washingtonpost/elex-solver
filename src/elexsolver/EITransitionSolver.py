@@ -85,11 +85,11 @@ class EITransitionSolver(TransitionSolver):
                 shape=(num_units, num_cols),
             )
             try:
-                # TODO: keep trying to tune this for performance and speed
+                # DO NOT USE THE NUMPYRO NUTS SAMPLER
+                # IT IS UNSTABLE
                 model_trace = pm.sample(
                     chains=self._chains,
                     random_seed=self._seed,
-                    nuts_sampler="numpyro",
                     cores=self._chains,
                     draws=self._draws,
                     tune=self._tune,
