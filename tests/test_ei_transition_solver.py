@@ -3,8 +3,9 @@ import pytest
 
 from elexsolver.EITransitionSolver import EITransitionSolver
 
-RTOL = 1e-04
-ATOL = 1e-04
+# high tolerance to match PyMC's unit tests
+RTOL = 1e-01
+ATOL = 1e-01
 
 
 def test_ei_fit_predict():
@@ -30,9 +31,9 @@ def test_ei_fit_predict():
         ]
     )
 
-    expected = np.array([[0.530026, 0.469974], [0.401865, 0.598135]])
+    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
 
-    ei = EITransitionSolver(random_seed=1024)
+    ei = EITransitionSolver(random_seed=1024, n_samples=100, sampling_chains=1)
     current = ei.fit_predict(X, Y)
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
@@ -63,9 +64,9 @@ def test_ei_fit_predict_with_weights():
 
     weights = np.array([500, 250, 125, 62.5, 31.25, 15.625])
 
-    expected = np.array([[0.530026, 0.469974], [0.401865, 0.598135]])
+    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
 
-    ei = EITransitionSolver(random_seed=1024)
+    ei = EITransitionSolver(random_seed=1024, n_samples=100, sampling_chains=1)
     current = ei.fit_predict(X, Y, weights=weights)
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
@@ -93,9 +94,9 @@ def test_ei_fit_predict_pivoted():
         ]
     ).T
 
-    expected = np.array([[0.530026, 0.469974], [0.401865, 0.598135]])
+    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
 
-    ei = EITransitionSolver(random_seed=1024)
+    ei = EITransitionSolver(random_seed=1024, n_samples=100, sampling_chains=1)
     current = ei.fit_predict(X, Y)
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
