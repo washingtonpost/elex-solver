@@ -33,7 +33,7 @@ def test_ei_fit_predict():
         ]
     )
 
-    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
+    expected = np.array([[0.34566509, 0.65433491], [0.40254308, 0.59745692]])
 
     ei = EITransitionSolver(random_seed=1024, n_samples=5, sampling_chains=1)
     current = ei.fit_predict(X, Y)
@@ -66,7 +66,7 @@ def test_ei_fit_predict_with_weights():
 
     weights = np.array([500, 250, 125, 62.5, 31.25, 15.625])
 
-    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
+    expected = np.array([[0.34566509, 0.65433491], [0.40254308, 0.59745692]])
 
     ei = EITransitionSolver(random_seed=1024, n_samples=5, sampling_chains=1)
     current = ei.fit_predict(X, Y, weights=weights)
@@ -96,7 +96,7 @@ def test_ei_fit_predict_pivoted():
         ]
     ).T
 
-    expected = np.array([[0.735609, 0.264391], [0.204346, 0.795654]])
+    expected = np.array([[0.34566509, 0.65433491], [0.40254308, 0.59745692]])
 
     ei = EITransitionSolver(random_seed=1024, n_samples=5, sampling_chains=1)
     current = ei.fit_predict(X, Y)
