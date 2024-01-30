@@ -292,7 +292,7 @@ def test_bootstrap_fit_predict_with_weights():
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
 
-def test_bootstrap_confidence_interval():
+def test_bootstrap_confidence_interval_percentages():
     X = np.array(
         [
             [1, 2],
@@ -320,7 +320,7 @@ def test_bootstrap_confidence_interval():
 
     btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
     _ = btms.fit_predict(X, Y)
-    (current_lower, current_upper) = btms.get_confidence_interval(0.95)
+    (current_lower, current_upper) = btms.get_confidence_interval(0.95, transitions=False)
     np.testing.assert_allclose(expected_lower, current_lower, rtol=RTOL, atol=ATOL)
     np.testing.assert_allclose(expected_upper, current_upper, rtol=RTOL, atol=ATOL)
 
@@ -353,7 +353,7 @@ def test_bootstrap_confidence_interval_greater_than_1():
 
     btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
     _ = btms.fit_predict(X, Y)
-    (current_lower, current_upper) = btms.get_confidence_interval(95)
+    (current_lower, current_upper) = btms.get_confidence_interval(95, transitions=False)
     np.testing.assert_allclose(expected_lower, current_lower, rtol=RTOL, atol=ATOL)
     np.testing.assert_allclose(expected_upper, current_upper, rtol=RTOL, atol=ATOL)
 
@@ -386,6 +386,39 @@ def test_bootstrap_confidence_interval_invalid():
 
     with pytest.raises(ValueError):
         btms.get_confidence_interval(-34)
+
+
+def test_bootstrap_confidence_interval_transitions():
+    X = np.array(
+        [
+            [1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8],
+            [9, 10],
+            [11, 12],
+        ]
+    )
+
+    Y = np.array(
+        [
+            [2, 3],
+            [4, 5],
+            [6, 7],
+            [8, 9],
+            [10, 11],
+            [12, 13],
+        ]
+    )
+
+    expected_lower = np.array([[0.349649, 0.044297], [0.049151, 0.419715]])
+    expected_upper = np.array([[0.417241, 0.111889], [0.118746, 0.489311]])
+
+    btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
+    _ = btms.fit_predict(X, Y)
+    (current_lower, current_upper) = btms.get_confidence_interval(0.95, transitions=True)
+    np.testing.assert_allclose(expected_lower, current_lower, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_upper, current_upper, rtol=RTOL, atol=ATOL)
 
 
 def test_bootstrap_get_prediction_interval():
