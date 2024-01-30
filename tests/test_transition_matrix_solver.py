@@ -160,9 +160,74 @@ def test_matrix_fit_predict_pivoted():
 
 
 def test_matrix_get_prediction_interval():
+    tms = TransitionMatrixSolver()
     with pytest.raises(NotImplementedError):
-        tms = TransitionMatrixSolver()
         tms.get_prediction_interval(0)
+
+
+def test_matrix_fit_predict_bad_dimensions():
+    X = np.array(
+        [
+            [1, 2],
+            [3, 4],
+            [5, 6],
+            [7, 8],
+            [9, 10],
+            [11, 12],
+        ]
+    )
+
+    Y = np.array(
+        [
+            [2, 3],
+            [4, 5],
+            [6, 7],
+            [8, 9],
+        ]
+    )
+
+    tms = TransitionMatrixSolver()
+    with pytest.raises(ValueError):
+        tms.fit_predict(X, Y)
+
+
+def test_matrix_fit_predict_pandas():
+    try:
+        import pandas  # pylint: disable=import-outside-toplevel
+
+        X = pandas.DataFrame(
+            [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8],
+                [9, 10],
+                [11, 12],
+            ],
+            columns=["x1", "x2"],
+        )
+
+        Y = pandas.DataFrame(
+            [
+                [2, 3],
+                [4, 5],
+                [6, 7],
+                [8, 9],
+                [10, 11],
+                [12, 13],
+            ],
+            columns=["y1", "y2"],
+        )
+
+        expected = np.array([[0.760428, 0.239572], [0.216642, 0.783358]])
+
+        tms = TransitionMatrixSolver()
+        current = tms.fit_predict(X, Y)
+        np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
+
+    except ImportError:
+        # pass this test through since pandas isn't a requirement for elex-solver
+        assert True
 
 
 def test_bootstrap_fit_predict():
@@ -321,3 +386,48 @@ def test_bootstrap_confidence_interval_invalid():
 
     with pytest.raises(ValueError):
         btms.get_confidence_interval(-34)
+
+
+def test_bootstrap_get_prediction_interval():
+    btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
+    with pytest.raises(NotImplementedError):
+        btms.get_prediction_interval(0)
+
+
+def test_bootstrap_fit_predict_pandas():
+    try:
+        import pandas  # pylint: disable=import-outside-toplevel
+
+        X = pandas.DataFrame(
+            [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8],
+                [9, 10],
+                [11, 12],
+            ],
+            columns=["x1", "x2"],
+        )
+
+        Y = pandas.DataFrame(
+            [
+                [2, 3],
+                [4, 5],
+                [6, 7],
+                [8, 9],
+                [10, 11],
+                [12, 13],
+            ],
+            columns=["y1", "y2"],
+        )
+
+        expected = np.array([[0.809393, 0.190607], [0.173843, 0.826157]])
+
+        btms = BootstrapTransitionMatrixSolver(B=10, verbose=False)
+        current = btms.fit_predict(X, Y)
+        np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
+
+    except ImportError:
+        # pass this test through since pandas isn't a requirement for elex-solver
+        assert True
