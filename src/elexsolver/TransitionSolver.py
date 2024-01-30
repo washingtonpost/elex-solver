@@ -20,6 +20,23 @@ class TransitionSolver(ABC):
         self._transitions = None
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
+        """
+        After this method finishes, transitions will be available in the `transitions` class member.
+
+        Parameters
+        ----------
+        `X` : np.ndarray matrix or pandas.DataFrame of int
+            Must have the same number of rows as `Y` but can have any number of columns greater than the number of rows.
+        `Y` : np.ndarray matrix or pandas.DataFrame of int
+            Must have the same number of rows as `X` but can have any number of columns greater than the number of rows.
+        `weights` : list, np.ndarray, or pandas.Series of int, optional
+            Must have the same length (number of rows) as both `X` and `Y`.
+
+        Returns
+        -------
+        np.ndarray matrix of float of shape (number of columns in `X`) x (number of columns in `Y`).
+        Each float represents the percent of how much of row x is part of column y.
+        """
         raise NotImplementedError
 
     def get_prediction_interval(self, pi: float):
