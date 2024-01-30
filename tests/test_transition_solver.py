@@ -21,6 +21,12 @@ def test_superclass_get_prediction_interval():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_superclass_get_transitions():
+    ts = TransitionSolver()
+    assert ts.transitions is None
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
 def test_check_any_element_nan_or_inf_with_nan():
     with pytest.raises(ValueError):
         A = np.array([[0.1, 0.2, 0.3], [0.4, np.nan, 0.6]])
