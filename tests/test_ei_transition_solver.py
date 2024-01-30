@@ -104,6 +104,31 @@ def test_ei_fit_predict_pivoted():
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
 
+def test_ei_fit_predict_bad_dimensions():
+    X = np.array(
+        [
+            [1, 2],
+            [3, 4],
+            [5, 6],
+        ]
+    )
+
+    Y = np.array(
+        [
+            [2, 3],
+            [4, 5],
+            [6, 7],
+            [8, 9],
+            [10, 11],
+            [12, 13],
+        ]
+    )
+
+    ei = EITransitionSolver(random_seed=1024, n_samples=10, sampling_chains=1)
+    with pytest.raises(ValueError):
+        ei.fit_predict(X, Y)
+
+
 def test_ei_get_prediction_interval():
     with pytest.raises(NotImplementedError):
         ei = EITransitionSolver()
