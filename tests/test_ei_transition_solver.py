@@ -7,6 +7,8 @@ from elexsolver.EITransitionSolver import EITransitionSolver
 RTOL = 1e-01
 ATOL = 1e-01
 
+np.random.seed(1024)
+
 
 def test_ei_fit_predict():
     X = np.array(
