@@ -17,13 +17,12 @@ We have our own implementation of ordinary least squares in Python because this 
 Since we did not find any implementations of quantile regression in Python that fit our needs, we decided to write one ourselves. At the moment this uses two libraries, the version that solves the non-regularized problem uses `numpy`and solves the dual based on [this](https://arxiv.org/pdf/2305.12616.pdf) paper. The version that solves the regularized problem uses [`cvxpy`](https://www.cvxpy.org/#) and sets up the problem as a normal optimization problem. Eventually, we are planning on replacing the regularized version with the dual also.
 
 ## Transition Matrices
-We have three solvers for transition matrices:
+We have two solvers for transition matrices:
 
 1. A matrix regression solver built using `cvxpy`;
-2. A bootstrapped version of #1;
-3. A Bayesian ecological inference solver built using [`pymc`](https://www.pymc.io/) based on [Knudson et al., (2021)](https://doi.org/10.21105/joss.03397) and [Rosen et al., (2001)](https://tinyurl.com/yajkae6n).
+2. A Bayesian ecological inference solver built using [`pymc`](https://www.pymc.io/) based on [Knudson et al., (2021)](https://doi.org/10.21105/joss.03397) and [Rosen et al., (2001)](https://tinyurl.com/yajkae6n).
 
-We have used #1 for our primary election model and analysis.  The transitions it generates form the transitions displayed in our sankey diagrams, but all three solvers could be used for the same purpose.
+We have used #1 for our primary election model and analysis.  The transitions it generates form the transitions displayed in our sankey diagrams, but all two solvers could be used for the same purpose.
 
 ## Development
 We welcome contributions to this repo. Please open a Github issue for any issues or comments you have.
