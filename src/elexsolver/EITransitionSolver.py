@@ -117,10 +117,10 @@ class EITransitionSolver(TransitionSolver):
         self._sampled = np.transpose(samples_summed_across / X.sum(axis=0), axes=(1, 2, 0))
 
         posterior_mean_rxc = self._sampled.mean(axis=0)
-        self._transitions = self._get_transitions(posterior_mean_rxc)
+        self._transitions = self.__get_transitions(posterior_mean_rxc)
         return posterior_mean_rxc
 
-    def _get_transitions(self, A: np.ndarray):
+    def __get_transitions(self, A: np.ndarray):
         # to go from inferred percentages to transitions
         transitions = []
         for col in A.T:
@@ -158,5 +158,5 @@ class EITransitionSolver(TransitionSolver):
                     A_dict[interval][i][j] = np.percentile(self._sampled[:, i, j], interval)
 
         if transitions:
-            return (self._get_transitions(A_dict[lower]), self._get_transitions(A_dict[upper]))
+            return (self.__get_transitions(A_dict[lower]), self.__get_transitions(A_dict[upper]))
         return (A_dict[lower], A_dict[upper])
