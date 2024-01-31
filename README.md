@@ -16,7 +16,7 @@ We have our own implementation of ordinary least squares in Python because this 
 ## Quantile Regression
 Since we did not find any implementations of quantile regression in Python that fit our needs, we decided to write one ourselves. At the moment this uses two libraries, the version that solves the non-regularized problem uses `numpy`and solves the dual based on [this](https://arxiv.org/pdf/2305.12616.pdf) paper. The version that solves the regularized problem uses [`cvxpy`](https://www.cvxpy.org/#) and sets up the problem as a normal optimization problem. Eventually, we are planning on replacing the regularized version with the dual also.
 
-## Transition matrices
+## Transition Matrices
 We have three solvers for transition matrices:
 
 1. A matrix regression solver built using `cvxpy`;
