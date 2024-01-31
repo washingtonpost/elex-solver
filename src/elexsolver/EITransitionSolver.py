@@ -15,7 +15,7 @@ logging.getLogger("jax").setLevel(logging.ERROR)
 
 class EITransitionSolver(TransitionSolver):
     """
-    A (voter) transition solver based on RxC ecological inference.
+    A transition solver based on RxC ecological inference.
     Somewhat adapted from version 1.0.1 of
     Knudson et al., (2021). PyEI: A Python package for ecological inference.
     Journal of Open Source Software, 6(64), 3397, https://doi.org/10.21105/joss.03397
@@ -26,6 +26,18 @@ class EITransitionSolver(TransitionSolver):
     """
 
     def __init__(self, sigma: int = 1, sampling_chains: int = 2, random_seed: int | None = None, n_samples: int = 300):
+        """
+        Parameters
+        ----------
+        `sigma` : int, default 1
+            Standard deviation of the half-normal distribution that provides alphas to the Dirichlet distribution.
+        `sampling_chains` : int, default 2
+            The number of sampling chains to run in parallel, each of which will draw `n_samples`.
+        `random_seed` : int, optional
+            For seeding the NUTS sampler.
+        `n_samples` : int, default 300
+            The number of samples to draw.  Before sampling, the NUTS sampler will be tuned using `n_samples // 2` samples.
+        """
         super().__init__()
         self._sigma = sigma
         self._chains = int(sampling_chains)
@@ -39,7 +51,6 @@ class EITransitionSolver(TransitionSolver):
 
     def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
         """
-        X and Y are matrixes of integers.
         NOTE: weighting is not currently implemented.
         """
         self._check_data_type(X)
@@ -117,6 +128,18 @@ class EITransitionSolver(TransitionSolver):
         return np.array(transitions).T
 
     def get_credible_interval(self, ci: float, transitions: bool = False):
+        """
+        Parameters
+        ----------
+        `ci` : float
+            Size of the credible interval [0, 100).  If <= 1, will be multiplied by 100.
+        `transitions` : bool, default False
+            If True, the returned matrices will represent transitions, not percentages.
+
+        Returns
+        -------
+        A tuple of two np.ndarray matrices of float.  Element 0 has the lower bound and 1 has the upper bound.
+        """
         if ci <= 1:
             ci = ci * 100
         if ci < 0 or ci > 100:
@@ -129,10 +152,10 @@ class EITransitionSolver(TransitionSolver):
             upper: np.zeros((self._sampled.shape[1], self._sampled.shape[2])),
         }
 
-        for ci in [lower, upper]:
+        for interval in [lower, upper]:
             for i in range(0, self._sampled.shape[1]):
                 for j in range(0, self._sampled.shape[2]):
-                    A_dict[ci][i][j] = np.percentile(self._sampled[:, i, j], ci)
+                    A_dict[interval][i][j] = np.percentile(self._sampled[:, i, j], interval)
 
         if transitions:
             return (self._get_transitions(A_dict[lower]), self._get_transitions(A_dict[upper]))

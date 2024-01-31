@@ -23,7 +23,7 @@ class TransitionMatrixSolver(TransitionSolver):
         Parameters
         ----------
         `strict` : bool, default True
-            If `True`, solution will be constrainted so that all coefficients are >= 0,
+            If True, solution will be constrainted so that all coefficients are >= 0,
             <= 1, and the sum of each row equals 1.
         `lam` : float, optional
             `lam` != 0 will enable L2 regularization (Ridge).
@@ -172,7 +172,7 @@ class BootstrapTransitionMatrixSolver(TransitionSolver):
         `alpha` : float
             Value between [0, 1).  If greater than 1, will be divided by 100.
         `transitions` : bool, default False
-            If True, the returned matrix will represent transitions, not percentages.
+            If True, the returned matrices will represent transitions, not percentages.
 
         Returns
         -------

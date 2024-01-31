@@ -13,7 +13,7 @@ LOG = logging.getLogger(__name__)
 
 class TransitionSolver(ABC):
     """
-    Abstract class for (voter) transition solvers.
+    Abstract class for transition solvers.
     """
 
     def __init__(self):
