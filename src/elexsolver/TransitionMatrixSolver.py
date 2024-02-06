@@ -66,8 +66,7 @@ class TransitionMatrixSolver(TransitionSolver):
             try:
                 problem.solve(solver=cp.CLARABEL)
             except (UserWarning, cp.error.SolverError) as e:
-                LOG.error(e)
-                return np.zeros((A.shape[1], B.shape[1]))
+                raise RuntimeError(e) from e
 
         return transition_matrix.value
 
