@@ -75,18 +75,6 @@ class TransitionMatrixSolver(TransitionSolver):
         self._check_data_type(Y)
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
-
-        # matrices should be (units x things), where the number of units is > the number of things
-        if X.shape[1] > X.shape[0]:
-            X = X.T
-        if Y.shape[1] > Y.shape[0]:
-            Y = Y.T
-
-        if X.shape[0] != Y.shape[0]:
-            raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
-
-        self._check_dimensions(X)
-        self._check_dimensions(Y)
         self._check_for_zero_units(X)
         self._check_for_zero_units(Y)
 
@@ -94,6 +82,9 @@ class TransitionMatrixSolver(TransitionSolver):
             X = X.to_numpy()
         if not isinstance(Y, np.ndarray):
             Y = Y.to_numpy()
+
+        if X.shape[0] != Y.shape[0]:
+            raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
 
         X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
 

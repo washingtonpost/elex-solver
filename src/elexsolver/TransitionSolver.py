@@ -54,14 +54,6 @@ class TransitionSolver(ABC):
         if not np.all(A.astype("int64") == A):
             raise ValueError("Matrix must contain integers.")
 
-    def _check_dimensions(self, A: np.ndarray):
-        """
-        Ensure that in our (units x things) matrix, the number of units is
-        at least twice as large as the number of things.
-        """
-        if A.shape[0] <= A.shape[1] or (A.shape[0] // 2) <= A.shape[1]:
-            raise ValueError(f"Not enough units ({A.shape[0]}) relative to the number of things ({A.shape[1]}).")
-
     def _check_for_zero_units(self, A: np.ndarray):
         """
         If we have at least one unit whose columns are all zero, we can't continue.
