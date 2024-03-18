@@ -3,7 +3,7 @@ from codecs import open
 
 from setuptools import find_packages, setup
 
-INSTALL_REQUIRES = ["cvxpy~=1.4", "numpy~=1.26", "pymc~=5.10", "scipy~=1.12", "tqdm"]
+INSTALL_REQUIRES = ["cvxpy~=1.4", "numpy~=1.26", "scipy~=1.12", "tqdm"]
 
 THIS_FILE_DIR = os.path.dirname(__file__)
 

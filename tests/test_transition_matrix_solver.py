@@ -159,12 +159,6 @@ def test_matrix_fit_predict_pivoted():
     np.testing.assert_allclose(expected, current, rtol=RTOL, atol=ATOL)
 
 
-def test_matrix_get_prediction_interval():
-    tms = TransitionMatrixSolver()
-    with pytest.raises(NotImplementedError):
-        tms.get_prediction_interval(0)
-
-
 def test_matrix_fit_predict_bad_dimensions():
     X = np.array(
         [
