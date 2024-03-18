@@ -39,6 +39,9 @@ class TransitionSolver(ABC):
         """
         raise NotImplementedError
 
+    def get_prediction_interval(self, pi: float):
+        raise NotImplementedError
+
     @property
     def transitions(self) -> np.ndarray:
         return self._transitions

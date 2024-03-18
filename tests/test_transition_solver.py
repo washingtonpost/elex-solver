@@ -14,6 +14,13 @@ def test_superclass_fit_predict():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_superclass_get_prediction_interval():
+    with pytest.raises(NotImplementedError):
+        ts = TransitionSolver()
+        ts.get_prediction_interval(0)
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
 def test_superclass_get_transitions():
     ts = TransitionSolver()
     assert ts.transitions is None
