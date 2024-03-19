@@ -93,6 +93,6 @@ class TransitionMatrixSolver(TransitionSolver):
 
         weights = self._check_and_prepare_weights(X, Y, sample_weight)
 
-        self._betas = self.__solve(X, Y, weights)
-        self._transitions = np.diag(X_expected_totals) @ self._betas
+        self.coefficients = self.__solve(X, Y, weights)
+        self._transitions = np.diag(X_expected_totals) @ self.coefficients
         return self

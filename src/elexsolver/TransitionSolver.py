@@ -1,23 +1,23 @@
 import logging
 import warnings
-from abc import ABC
 
 import numpy as np
 
 from elexsolver.logging import initialize_logging
+from elexsolver.LinearSolver import LinearSolver
 
 initialize_logging()
 
 LOG = logging.getLogger(__name__)
 
 
-class TransitionSolver(ABC):
+class TransitionSolver(LinearSolver):
     """
     Abstract class for transition solvers.
     """
 
     def __init__(self):
-        self._betas = None
+        super().__init__()
         self._transitions = None
 
     def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None):
@@ -50,9 +50,9 @@ class TransitionSolver(ABC):
         -------
         `Y_hat`, np.ndarray of float of the same shape as Y.
         """
-        if self._betas is None:
+        if self.coefficients is None:
             raise RuntimeError("Solver must be fit before prediction can be performed.")
-        return X @ self._betas
+        return X @ self.coefficients
 
     @property
     def transitions(self) -> np.ndarray:
@@ -68,14 +68,7 @@ class TransitionSolver(ABC):
         Each float represents the percent of how much of row x is part of column y.
         Will return `None` if `fit()` hasn't been called yet.
         """
-        return self._betas
-
-    def _check_any_element_nan_or_inf(self, A: np.ndarray):
-        """
-        Check whether any element in a matrix or vector is NaN or infinity
-        """
-        if np.any(np.isnan(A)) or np.any(np.isinf(A)):
-            raise ValueError("Matrix contains NaN or Infinity.")
+        return self.coefficients
 
     def _check_data_type(self, A: np.ndarray):
         if not np.all(A.astype("int64") == A):
