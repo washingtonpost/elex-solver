@@ -3,8 +3,8 @@ import warnings
 
 import numpy as np
 
-from elexsolver.logging import initialize_logging
 from elexsolver.LinearSolver import LinearSolver
+from elexsolver.logging import initialize_logging
 
 initialize_logging()
 
