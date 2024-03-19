@@ -39,7 +39,7 @@ class TransitionSolver(ABC):
         """
         raise NotImplementedError
 
-    def predict(self, X: np.ndarray):
+    def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Parameters
         ----------
