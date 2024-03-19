@@ -17,31 +17,58 @@ class TransitionSolver(ABC):
     """
 
     def __init__(self):
+        self._betas = None
         self._transitions = None
 
-    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None):
+    def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None):
         """
-        After this method finishes, transitions will be available in the `transitions` class member.
-
         Parameters
         ----------
         `X` : np.ndarray matrix or pandas.DataFrame of int
             Must have the same number of rows as `Y` but can have any number of columns greater than the number of rows.
         `Y` : np.ndarray matrix or pandas.DataFrame of int
             Must have the same number of rows as `X` but can have any number of columns greater than the number of rows.
-        `weights` : list, np.ndarray, or pandas.Series of int, optional
+        `sample_weight` : list, np.ndarray, or pandas.Series of int, optional
             Must have the same length (number of rows) as both `X` and `Y`.
 
         Returns
         -------
-        np.ndarray matrix of float of shape (number of columns in `X`) x (number of columns in `Y`).
+        `self` and populates `betas` with the beta coefficients determined by this solver.
+        `betas` is an np.ndarray matrix of float of shape (number of columns in `X`) x (number of columns in `Y`).
         Each float represents the percent of how much of row x is part of column y.
         """
         raise NotImplementedError
 
+    def predict(self, X: np.ndarray):
+        """
+        Parameters
+        ----------
+        `X` : np.ndarray matrix or pandas.DataFrame of int
+            Must have the same dimensions as the `X` supplied to `fit()`.
+
+        Returns
+        -------
+        `Y_hat`, np.ndarray of float of the same shape as Y.
+        """
+        if self._betas is None:
+            raise RuntimeError("Solver must be fit before prediction can be performed.")
+        return X @ self._betas
+
     @property
     def transitions(self) -> np.ndarray:
         return self._transitions
+
+    @property
+    def betas(self) -> np.ndarray:
+        """
+        Returns
+        -------
+        The solved coefficients, an np.ndarray matrix of float of shape
+        (number of columns in `X`) x (number of columns in `Y`).
+        Each float represents the percent of how much of row x is part of column y.
+        Will return `None` if `fit()` hasn't been called yet.
+        """
+        return self._betas
 
     def _check_any_element_nan_or_inf(self, A: np.ndarray):
         """

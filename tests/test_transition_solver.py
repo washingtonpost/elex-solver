@@ -7,16 +7,29 @@ from elexsolver.TransitionSolver import TransitionSolver
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_superclass_fit_predict():
+def test_superclass_fit():
     with pytest.raises(NotImplementedError):
         ts = TransitionSolver()
-        ts.fit_predict(None, None)
+        ts.fit(None, None)
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_superclass_predict():
+    with pytest.raises(RuntimeError):
+        ts = TransitionSolver()
+        ts.predict(None)
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
 def test_superclass_get_transitions():
     ts = TransitionSolver()
     assert ts.transitions is None
+
+
+@patch.object(TransitionSolver, "__abstractmethods__", set())
+def test_superclass_get_betas():
+    ts = TransitionSolver()
+    assert ts.betas is None
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())

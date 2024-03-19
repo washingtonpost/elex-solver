@@ -70,7 +70,7 @@ class TransitionMatrixSolver(TransitionSolver):
 
         return transition_matrix.value
 
-    def fit_predict(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None = None) -> np.ndarray:
+    def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None) -> np.ndarray:
         self._check_data_type(X)
         self._check_data_type(Y)
         self._check_any_element_nan_or_inf(X)
@@ -91,8 +91,8 @@ class TransitionMatrixSolver(TransitionSolver):
         X = self._rescale(X)
         Y = self._rescale(Y)
 
-        weights = self._check_and_prepare_weights(X, Y, weights)
+        weights = self._check_and_prepare_weights(X, Y, sample_weight)
 
-        percentages = self.__solve(X, Y, weights)
-        self._transitions = np.diag(X_expected_totals) @ percentages
-        return percentages
+        self._betas = self.__solve(X, Y, weights)
+        self._transitions = np.diag(X_expected_totals) @ self._betas
+        return self
