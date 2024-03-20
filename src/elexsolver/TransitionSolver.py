@@ -18,7 +18,6 @@ class TransitionSolver(LinearSolver):
 
     def __init__(self):
         super().__init__()
-        self._transitions = None
 
     def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None):
         """
@@ -53,10 +52,6 @@ class TransitionSolver(LinearSolver):
         if self.coefficients is None:
             raise RuntimeError("Solver must be fit before prediction can be performed.")
         return X @ self.coefficients
-
-    @property
-    def transitions(self) -> np.ndarray:
-        return self._transitions
 
     @property
     def betas(self) -> np.ndarray:

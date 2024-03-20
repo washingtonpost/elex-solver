@@ -86,13 +86,10 @@ class TransitionMatrixSolver(TransitionSolver):
         if X.shape[0] != Y.shape[0]:
             raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
 
-        X_expected_totals = X.sum(axis=0) / X.sum(axis=0).sum()
-
         X = self._rescale(X)
         Y = self._rescale(Y)
 
         weights = self._check_and_prepare_weights(X, Y, sample_weight)
 
         self.coefficients = self.__solve(X, Y, weights)
-        self._transitions = np.diag(X_expected_totals) @ self.coefficients
         return self
