@@ -44,7 +44,7 @@ def test_matrix_fit_predict():
 
     tms = TransitionMatrixSolver().fit(X, Y)
     current_yhat = tms.predict(X)
-    np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
     np.testing.assert_allclose(expected_yhat, current_yhat, rtol=RTOL, atol=ATOL)
 
 
@@ -76,7 +76,7 @@ def test_matrix_fit_predict_with_weights():
     expected_betas = np.array([[0.737329, 0.262671], [0.230589, 0.769411]])
 
     tms = TransitionMatrixSolver().fit(X, Y, sample_weight=weights)
-    np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
 
 
 def test_matrix_fit_predict_not_strict():
@@ -105,7 +105,7 @@ def test_matrix_fit_predict_not_strict():
     expected_betas = np.array([[0.760451, 0.239558], [0.216624, 0.783369]])
 
     tms = TransitionMatrixSolver(strict=False).fit(X, Y)
-    np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
 
 
 def test_ridge_matrix_fit_predict():
@@ -134,7 +134,7 @@ def test_ridge_matrix_fit_predict():
     expected_betas = np.array([[0.479416, 0.520584], [0.455918, 0.544082]])
 
     tms = TransitionMatrixSolver(lam=1).fit(X, Y)
-    np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
 
 
 def test_matrix_fit_predict_pivoted():
@@ -172,7 +172,7 @@ def test_matrix_fit_predict_pivoted():
     )
 
     tms = TransitionMatrixSolver().fit(X, Y)
-    np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+    np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
 
 
 def test_matrix_fit_predict_bad_dimensions():
@@ -232,7 +232,7 @@ def test_matrix_fit_predict_pandas():
         expected_betas = np.array([[0.760428, 0.239572], [0.216642, 0.783358]])
 
         tms = TransitionMatrixSolver().fit(X, Y)
-        np.testing.assert_allclose(expected_betas, tms.betas, rtol=RTOL, atol=ATOL)
+        np.testing.assert_allclose(expected_betas, tms.coefficients, rtol=RTOL, atol=ATOL)
 
     except ImportError:
         # pass this test through since pandas isn't a requirement for elex-solver

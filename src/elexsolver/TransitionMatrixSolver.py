@@ -21,11 +21,11 @@ class TransitionMatrixSolver(TransitionSolver):
         """
         Parameters
         ----------
-        `strict` : bool, default True
-            If True, solution will be constrainted so that all coefficients are >= 0,
+        strict : bool, default True
+            If `True`, solution will be constrainted so that all coefficients are >= 0,
             <= 1, and the sum of each row equals 1.
-        `lam` : float, optional
-            `lam` != 0 will enable L2 regularization (Ridge).
+        lam : float, optional
+            `lam != 0` will enable L2 regularization (Ridge).
         """
         super().__init__()
         self._strict = strict

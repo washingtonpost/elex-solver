@@ -21,9 +21,9 @@ def test_superclass_predict():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_superclass_get_betas():
+def test_superclass_get_coefficients():
     ts = TransitionSolver()
-    assert ts.betas is None
+    assert ts.coefficients is None
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())

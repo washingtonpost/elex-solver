@@ -17,17 +17,23 @@ class TransitionSolver(LinearSolver):
     """
 
     def __init__(self):
+        """
+        After model-fit, `self.coefficients` will contain
+        the solved coefficients, an np.ndarray matrix of float of shape
+        (number of columns in `X`) x (number of columns in `Y`).
+        Each float represents the percent of how much of row x is part of column y.
+        """
         super().__init__()
 
     def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None):
         """
         Parameters
         ----------
-        `X` : np.ndarray matrix or pandas.DataFrame of int
+        X : np.ndarray matrix or pandas.DataFrame of int
             Must have the same number of rows as `Y` but can have any number of columns greater than the number of rows.
-        `Y` : np.ndarray matrix or pandas.DataFrame of int
+        Y : np.ndarray matrix or pandas.DataFrame of int
             Must have the same number of rows as `X` but can have any number of columns greater than the number of rows.
-        `sample_weight` : list, np.ndarray, or pandas.Series of int, optional
+        sample_weight : list or np.ndarray or pandas.Series of int, optional
             Must have the same length (number of rows) as both `X` and `Y`.
 
         Returns
@@ -42,7 +48,7 @@ class TransitionSolver(LinearSolver):
         """
         Parameters
         ----------
-        `X` : np.ndarray matrix or pandas.DataFrame of int
+        X : np.ndarray matrix or pandas.DataFrame of int
             Must have the same dimensions as the `X` supplied to `fit()`.
 
         Returns
@@ -53,19 +59,11 @@ class TransitionSolver(LinearSolver):
             raise RuntimeError("Solver must be fit before prediction can be performed.")
         return X @ self.coefficients
 
-    @property
-    def betas(self) -> np.ndarray:
-        """
-        Returns
-        -------
-        The solved coefficients, an np.ndarray matrix of float of shape
-        (number of columns in `X`) x (number of columns in `Y`).
-        Each float represents the percent of how much of row x is part of column y.
-        Will return `None` if `fit()` hasn't been called yet.
-        """
-        return self.coefficients
-
     def _check_data_type(self, A: np.ndarray):
+        """
+        Make sure we're starting with count data which we'll standardize to percentages
+        by calling `self._rescale(A)` later.
+        """
         if not np.all(A.astype("int64") == A):
             raise ValueError("Matrix must contain integers.")
 
@@ -97,9 +95,9 @@ class TransitionSolver(LinearSolver):
 
         Parameters
         ----------
-        `X` : np.ndarray matrix of int (same number of rows as `Y`)
-        `Y` : np.ndarray matrix of int (same number of rows as `X`)
-        `weights` : np.ndarray of int of the shape (number of rows in `X` and `Y`, 1), optional
+        X : np.ndarray matrix of int (same number of rows as `Y`)
+        Y : np.ndarray matrix of int (same number of rows as `X`)
+        weights : np.ndarray of int of the shape (number of rows in `X` and `Y`, 1), optional
         """
 
         if weights is not None:
