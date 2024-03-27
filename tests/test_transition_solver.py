@@ -69,43 +69,6 @@ def test_check_for_zero_units_bad():
 
 
 @patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_rescale_rescaled_numpy():
-    A = np.ones((2, 2)).astype(int)
-    expected = np.array([[0.5, 0.5], [0.5, 0.5]])
-    ts = TransitionSolver()
-    np.testing.assert_array_equal(ts._rescale(A), expected)  # pylint: disable=protected-access
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_rescale_rescaled_pandas():
-    try:
-        import pandas  # pylint: disable=import-outside-toplevel
-
-        a_df = pandas.DataFrame(np.ones((2, 2)), columns=["A", "B"]).astype(int)
-        expected_df = pandas.DataFrame([[0.5, 0.5], [0.5, 0.5]], columns=["A", "B"])
-        ts = TransitionSolver()
-        np.testing.assert_array_equal(expected_df, ts._rescale(a_df))  # pylint: disable=protected-access
-    except ImportError:
-        # pass this test through since pandas isn't a requirement for elex-solver
-        assert True
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_check_data_type_good():
-    A = np.array([[1, 2, 3], [4, 5, 6]])
-    ts = TransitionSolver()
-    ts._check_data_type(A)  # pylint: disable=protected-access
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
-def test_check_data_type_bad():
-    with pytest.raises(ValueError):
-        A = np.array([[0.1, 0.2, 0.3]])
-        ts = TransitionSolver()
-        ts._check_data_type(A)  # pylint: disable=protected-access
-
-
-@patch.object(TransitionSolver, "__abstractmethods__", set())
 def test_check_and_prepare_weights_bad():
     with pytest.raises(ValueError):
         weights = [1, 2]

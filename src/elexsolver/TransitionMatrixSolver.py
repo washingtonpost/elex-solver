@@ -71,8 +71,6 @@ class TransitionMatrixSolver(TransitionSolver):
         return transition_matrix.value
 
     def fit(self, X: np.ndarray, Y: np.ndarray, sample_weight: np.ndarray | None = None) -> np.ndarray:
-        self._check_data_type(X)
-        self._check_data_type(Y)
         self._check_any_element_nan_or_inf(X)
         self._check_any_element_nan_or_inf(Y)
         self._check_for_zero_units(X)
@@ -85,9 +83,6 @@ class TransitionMatrixSolver(TransitionSolver):
 
         if X.shape[0] != Y.shape[0]:
             raise ValueError(f"Number of units in X ({X.shape[0]}) != number of units in Y ({Y.shape[0]}).")
-
-        X = self._rescale(X)
-        Y = self._rescale(Y)
 
         weights = self._check_and_prepare_weights(X, Y, sample_weight)
 

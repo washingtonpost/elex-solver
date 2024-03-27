@@ -1,5 +1,4 @@
 import logging
-import warnings
 
 import numpy as np
 
@@ -59,32 +58,12 @@ class TransitionSolver(LinearSolver):
             raise RuntimeError("Solver must be fit before prediction can be performed.")
         return X @ self.coefficients
 
-    def _check_data_type(self, A: np.ndarray):
-        """
-        Make sure we're starting with count data which we'll standardize to percentages
-        by calling `self._rescale(A)` later.
-        """
-        if not np.all(A.astype("int64") == A):
-            raise ValueError("Matrix must contain integers.")
-
     def _check_for_zero_units(self, A: np.ndarray):
         """
         If we have at least one unit whose columns are all zero, we can't continue.
         """
         if np.any(np.sum(A, axis=1) == 0):
             raise ValueError("Matrix cannot contain any rows (units) where all columns (things) are zero.")
-
-    def _rescale(self, A: np.ndarray) -> np.ndarray:
-        """
-        Rescale rows (units) to ensure they sum to 1 (100%).
-        """
-        A = A.copy().astype(float)
-
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=RuntimeWarning, message="invalid value encountered in divide")
-            A = (A.T / A.sum(axis=1)).T
-
-        return np.nan_to_num(A, nan=0, posinf=0, neginf=0)
 
     def _check_and_prepare_weights(self, X: np.ndarray, Y: np.ndarray, weights: np.ndarray | None) -> np.ndarray:
         """
