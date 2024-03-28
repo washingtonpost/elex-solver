@@ -56,11 +56,14 @@ class TransitionSolver(LinearSolver):
         """
         if self.coefficients is None:
             raise RuntimeError("Solver must be fit before prediction can be performed.")
+
+        self._check_any_element_nan_or_inf(X)
+
         return X @ self.coefficients
 
     def _check_for_zero_units(self, A: np.ndarray):
         """
-        If we have at least one unit whose columns are all zero, we can't continue.
+        If we have at least one unit whose columns are all zero, most if not all of our solvers will fail.
         """
         if np.any(np.sum(A, axis=1) == 0):
             raise ValueError("Matrix cannot contain any rows (units) where all columns (things) are zero.")
