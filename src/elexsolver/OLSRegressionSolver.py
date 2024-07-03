@@ -92,6 +92,7 @@ class OLSRegressionSolver(LinearSolver):
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
+        cache: bool = True
     ):
         self._check_any_element_nan_or_inf(x)
         self._check_any_element_nan_or_inf(y)
@@ -111,33 +112,37 @@ class OLSRegressionSolver(LinearSolver):
         # in the bootstrap setting we can now pass in the normal equations and can
         # save time re-computing them
         if normal_eqs is None:
-            self.normal_eqs = self._compute_normal_equations(
+            normal_eqs = self._compute_normal_equations(
                 x, L, lambda_, fit_intercept, regularize_intercept, n_feat_ignore_reg
             )
-        else:
-            self.normal_eqs = normal_eqs
 
         # compute hat matrix: X (X^T X)^{-1} X^T
-        self.hat_vals = np.diag(x @ self.normal_eqs @ L)
-
+        hat_vals = np.diag(x @ normal_eqs @ L)
         # compute coefficients: (X^T X)^{-1} X^T y
-        self.coefficients = self.normal_eqs @ L @ y
+        coefficients = normal_eqs @ L @ y
 
-    def residuals(self, y: np.ndarray, y_hat: np.ndarray, loo: bool = True, center: bool = True) -> np.ndarray:
-        """
-        Computes residuals for the model
-        """
-        # compute standard residuals
-        residuals = y - y_hat
+        if cache:
+            self.normal_eqs = normal_eqs
+            self.hat_vals = hat_vals
+            self.coefficients = coefficients
 
-        # if leave one out is True, inflate by (1 - P)
-        # in OLS setting inflating by (1 - P) is the same as computing the leave one out residuals
-        # the un-inflated training residuals are too small, since training covariates were observed during fitting
-        if loo:
+        return coefficients
+
+    def residuals(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, K: int | None = None, center: bool = True, **kwargs) -> np.ndarray:
+        if K == x.shape[0]:
+            # compute standard residuals
+            y_hat = self.predict(x)
+            residuals = y - y_hat
+
+            # inflate by (1 - P)
+            # in OLS setting inflating by (1 - P) is the same as computing the leave one out residuals
+            # the un-inflated training residuals are too small, since training covariates were observed during fitting
             residuals /= (1 - self.hat_vals).reshape(-1, 1)
 
-        # centering removes the column mean
-        if center:
-            residuals -= np.mean(residuals, axis=0)
+            # centering removes the column mean
+            if center:
+                residuals -= np.mean(residuals, axis=0)
+        else:
+            residuals = super().residuals(x, y, weights, K, center, **kwargs)
 
         return residuals
