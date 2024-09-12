@@ -62,7 +62,7 @@ class QuantileRegressionSolver(LinearSolver):
         Fits quantile regression with regularization
         TODO: convert this problem to use the dual like in the non regularization case
         """
-        arguments = {"ECOS": {"max_iters": 10000}}
+        arguments = {cp.CLARABEL: {"max_iter": 10000}}
         coefficients = cp.Variable((x.shape[1],))
         y_hat = x @ coefficients
         residual = y - y_hat
@@ -70,7 +70,7 @@ class QuantileRegressionSolver(LinearSolver):
         loss_function += lambda_ * self._get_regularizer(coefficients, regularize_intercept, n_feat_ignore_reg)
         objective = cp.Minimize(loss_function)
         problem = cp.Problem(objective)
-        problem.solve(solver="ECOS", **arguments.get("ECOS", {}))
+        problem.solve(solver=cp.CLARABEL, **arguments.get(cp.CLARABEL, {}))
         return coefficients.value
 
     def fit(
