@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import cvxpy as cp
 import numpy as np
@@ -61,17 +62,23 @@ class QuantileRegressionSolver(LinearSolver):
         """
         Fits quantile regression with regularization
         TODO: convert this problem to use the dual like in the non regularization case
+        TODO: experiment with switching to CLARABEL instead of ECOS
         """
-        arguments = {"ECOS": {"max_iters": 10000}}
-        coefficients = cp.Variable((x.shape[1],))
-        y_hat = x @ coefficients
-        residual = y - y_hat
-        loss_function = cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (tau - 0.5) * residual))
-        loss_function += lambda_ * self._get_regularizer(coefficients, regularize_intercept, n_feat_ignore_reg)
-        objective = cp.Minimize(loss_function)
-        problem = cp.Problem(objective)
-        problem.solve(solver="ECOS", **arguments.get("ECOS", {}))
-        return coefficients.value
+
+        with warnings.catch_warnings():
+            # silence the warning we receive from cvxpy about having not yet switched away from ECOS
+            warnings.simplefilter("ignore", FutureWarning)
+
+            arguments = {cp.ECOS: {"max_iters": 10000}}
+            coefficients = cp.Variable((x.shape[1],))
+            y_hat = x @ coefficients
+            residual = y - y_hat
+            loss_function = cp.sum(cp.multiply(weights, 0.5 * cp.abs(residual) + (tau - 0.5) * residual))
+            loss_function += lambda_ * self._get_regularizer(coefficients, regularize_intercept, n_feat_ignore_reg)
+            objective = cp.Minimize(loss_function)
+            problem = cp.Problem(objective)
+            problem.solve(solver=cp.ECOS, **arguments.get(cp.ECOS, {}))
+            return coefficients.value
 
     def fit(
         self,
