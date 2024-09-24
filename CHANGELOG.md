@@ -1,4 +1,7 @@
 # Changelog
+### 2.1.1 - 2024-09-12
+- chore: Updated all required packages to their latest versions.  Switched `QuantileRegressionSolver`'s solver from `ECOS` to `Clarabel` [#22](https://github.com/washingtonpost/elex-solver/pull/22)	
+
 ### 2.1.0 - 2024-03-29
 - feat: Transition matrix solver. [#17](https://github.com/washingtonpost/elex-solver/pull/17)
 
