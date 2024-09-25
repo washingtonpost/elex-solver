@@ -30,10 +30,7 @@ class QuantileRegressionSolver(LinearSolver):
         # A_eq are the equality constraint matrix
         # b_eq is the equality constraint vector (ie. A_eq @ x = b_eq)
         # bounds are the (min, max) possible values of every element of x
-        try:
-            res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs", options={"presolve": False})
-        except:
-            import pdb; pdb.set_trace()
+        res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs", options={"presolve": False})
 
         # marginal are the dual values, since we are solving the dual this is equivalent to the primal
         return -1 * res.eqlin.marginals
@@ -88,7 +85,7 @@ class QuantileRegressionSolver(LinearSolver):
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
         normalize_weights: bool = True,
-        cache: bool = True
+        cache: bool = True,
     ):
         """
         Fits quantile regression
@@ -110,14 +107,14 @@ class QuantileRegressionSolver(LinearSolver):
                 raise ZeroDivisionError
             weights = weights / weights_sum
 
-        if y.ndim == 1: # code expects 2-dim array
-            y = y.reshape(-1,1)
+        if y.ndim == 1:  # code expects 2-dim array
+            y = y.reshape(-1, 1)
 
         # _fit assumes that taus is list, so if we want to do one value of tau then turn into a list
         if isinstance(taus, float):
             taus = [taus]
         else:
-            assert y.shape[1] == 1 # you can either have multiple taus or multiple ys
+            assert y.shape[1] == 1  # you can either have multiple taus or multiple ys
         coefficients_array = []
         for tau in taus:
             for y_arr in y.T:

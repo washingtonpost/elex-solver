@@ -104,9 +104,9 @@ def test_multiple(random_data_no_weights):
     quantreg.fit(x, y, taus, fit_intercept=False)
     quantreg.predict(x)
     assert quantreg.coefficients.shape == (5, 3)
-    np.testing.assert_allclose(quantreg.coefficients[:,0], [0.17759, 6.99588, 4.18896, 4.83906, 3.22546], rtol=TOL)
-    np.testing.assert_allclose(quantreg.coefficients[:,1], [1.57699, 6.74906, 4.40175, 4.85346, 4.51814], rtol=TOL)
-    np.testing.assert_allclose(quantreg.coefficients[:,2], [1.85617, 6.81286, 6.05586, 5.51965, 4.19864], rtol=TOL)
+    np.testing.assert_allclose(quantreg.coefficients[:, 0], [0.17759, 6.99588, 4.18896, 4.83906, 3.22546], rtol=TOL)
+    np.testing.assert_allclose(quantreg.coefficients[:, 1], [1.57699, 6.74906, 4.40175, 4.85346, 4.51814], rtol=TOL)
+    np.testing.assert_allclose(quantreg.coefficients[:, 2], [1.85617, 6.81286, 6.05586, 5.51965, 4.19864], rtol=TOL)
 
 
 ######################

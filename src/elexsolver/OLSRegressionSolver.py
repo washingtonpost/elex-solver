@@ -92,7 +92,7 @@ class OLSRegressionSolver(LinearSolver):
         fit_intercept: bool = True,
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
-        cache: bool = True
+        cache: bool = True,
     ):
         self._check_any_element_nan_or_inf(x)
         self._check_any_element_nan_or_inf(y)
@@ -128,7 +128,15 @@ class OLSRegressionSolver(LinearSolver):
 
         return coefficients
 
-    def residuals(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, K: int | None = None, center: bool = True, **kwargs) -> np.ndarray:
+    def residuals(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: np.ndarray | None = None,
+        K: int | None = None,
+        center: bool = True,
+        **kwargs
+    ) -> np.ndarray:
         if K == x.shape[0]:
             # compute standard residuals
             y_hat = self.predict(x)

@@ -209,7 +209,7 @@ def test_residuals_no_weights(random_data_no_weights):
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
     y = random_data_no_weights["y"].values.reshape(-1, 1)
     lm.fit(x, y, fit_intercept=False)
-    predictions = lm.predict(x)
+    lm.predict(x)
 
     residuals = lm.residuals(x, y, K=None, center=False)
     assert residuals[0] == pytest.approx(0.885973530)
@@ -232,7 +232,7 @@ def test_residuals_weights(random_data_weights):
     weights = random_data_weights["weights"].values
 
     lm.fit(x, y, weights=weights, fit_intercept=False)
-    predictions = lm.predict(x)
+    lm.predict(x)
 
     residuals = lm.residuals(x, y, weights=weights, K=None, center=False)
 

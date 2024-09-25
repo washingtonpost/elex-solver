@@ -32,7 +32,15 @@ class LinearSolver(ABC):
         self.rng = np.random.default_rng(seed=0)
 
     @classmethod
-    def fit(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, lambda_: float = 0.0, cache: bool = True, **kwargs):
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: np.ndarray | None = None,
+        lambda_: float = 0.0,
+        cache: bool = True,
+        **kwargs,
+    ):
         """
         Fits model
         """
@@ -81,7 +89,15 @@ class LinearSolver(ABC):
         if ~np.all(x[:, 0] == 1):
             warnings.warn("Warning: fit_intercept=True and not all elements of the first columns are 1s")
 
-    def residuals(self, x: np.ndarray, y: np.ndarray, weights: np.ndarray | None = None, K: int | None = None, center: bool = True, **kwargs) -> np.ndarray:
+    def residuals(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        weights: np.ndarray | None = None,
+        K: int | None = None,
+        center: bool = True,
+        **kwargs,
+    ) -> np.ndarray:
         """
         Computes residuals for the model
         """
@@ -98,7 +114,7 @@ class LinearSolver(ABC):
             # shuffle for random order of datapoints
             self.rng.shuffle(indices)
             x_shuffled, y_shuffled, weights_shuffled = x[indices], y[indices], weights[indices]
-    
+
             # create folds
             x_folds = np.array_split(x_shuffled, K)
             y_folds = np.array_split(y_shuffled, K)
@@ -107,8 +123,12 @@ class LinearSolver(ABC):
             residuals = []
             for k in range(K):
                 # extract test points
-                x_test, y_test, weights_test, = x_folds[k], y_folds[k], weights_folds[k]
-                
+                x_test, y_test, _, = (
+                    x_folds[k],
+                    y_folds[k],
+                    weights_folds[k],
+                )
+
                 # extract training points
                 x_train = np.concatenate([x_folds[j] for j in range(K) if j != k])
                 y_train = np.concatenate([y_folds[j] for j in range(K) if j != k])
@@ -121,7 +141,7 @@ class LinearSolver(ABC):
                 # k-th residuals
                 residuals_k = y_test - y_hat_k
                 residuals.append(residuals_k)
-            
+
             residuals = np.concatenate(residuals)
             # undo shuffling of residuals, to put them in the original dataset order
             residuals = residuals[np.argsort(indices)]
