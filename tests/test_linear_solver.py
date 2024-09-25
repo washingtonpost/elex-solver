@@ -4,6 +4,7 @@ import pytest
 from elexsolver.LinearSolver import LinearSolver
 from elexsolver.QuantileRegressionSolver import QuantileRegressionSolver
 
+
 def test_fit():
     solver = LinearSolver()
     with pytest.raises(NotImplementedError):
@@ -23,6 +24,5 @@ def test_residuals_without_weights(rng):
     reg.fit(x, y, fit_intercept=False)
     reg.predict(x)
 
-    residuals_train = reg.residuals(x, y, K=None, center=False)
-    residuals_K = reg.residuals(x, y, K=10, center=False)
-    import pdb; pdb.set_trace()
+    reg.residuals(x, y, K=None, center=False)
+    reg.residuals(x, y, K=10, center=False)
