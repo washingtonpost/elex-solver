@@ -118,11 +118,9 @@ class QuantileRegressionSolver(LinearSolver):
             taus = [taus]
         else:
             assert y.shape[1] == 1 # you can either have multiple taus or multiple ys
-
         coefficients_array = []
         for tau in taus:
             for y_arr in y.T:
-                y_arr = y_arr.reshape(-1,1)
                 if lambda_ > 0:
                     coefficients = self._fit_with_regularization(
                         x, y_arr, weights, tau, lambda_, regularize_intercept, n_feat_ignore_reg
