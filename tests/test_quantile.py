@@ -55,6 +55,17 @@ def test_basic_upper():
     preds = quantreg.predict(x)
     np.testing.assert_array_equal(preds, [[9], [9], [9], [15]])
 
+def test_cache():
+    quantreg = QuantileRegressionSolver()
+    tau = 0.9
+    x = np.asarray([[1, 1], [1, 1], [1, 1], [1, 2]])
+    y = np.asarray([3, 8, 9, 15])
+    quantreg.fit(x, y, tau, cache=False)
+
+    assert quantreg.coefficients == []
+
+    quantreg.fit(x, y, tau, cache=True)
+    assert len(quantreg.coefficients) > 0
 
 ######################
 # Intermediate tests #

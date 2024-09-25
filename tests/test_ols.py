@@ -30,6 +30,20 @@ def test_basic2():
     preds = lm.predict(x)
     assert all(np.abs(preds - [6.666667, 6.666667, 6.666667, 15]) <= TOL)
 
+def test_cache():
+    lm = OLSRegressionSolver()
+    x = np.asarray([[1, 1], [1, 1], [1, 1], [1, 2]])
+    y = np.asarray([3, 8, 9, 15])
+    lm.fit(x, y, fit_intercept=True, cache=False)
+
+    assert lm.normal_eqs is None
+    assert lm.hat_vals is None
+
+    lm.fit(x, y, fit_intercept=True, cache=True)
+
+    assert lm.normal_eqs is not None
+    assert lm.hat_vals is not None
+    assert lm.coefficients is not None
 
 ######################
 # Intermediate tests #

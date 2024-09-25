@@ -4,6 +4,7 @@ import os
 import sys
 
 import pandas as pd
+import numpy as np
 import pytest
 
 _TEST_FOLDER = os.path.dirname(__file__)
@@ -40,3 +41,8 @@ def random_data_no_weights(get_fixture):
 @pytest.fixture(scope="session")
 def random_data_weights(get_fixture):
     return get_fixture("random_data_n100_p5_12549_weights.csv")
+
+@pytest.fixture(scope="session")
+def rng():
+    seed = 8232
+    return np.random.default_rng(seed=seed)
