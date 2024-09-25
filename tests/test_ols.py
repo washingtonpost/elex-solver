@@ -31,6 +31,22 @@ def test_basic2():
     assert all(np.abs(preds - [6.666667, 6.666667, 6.666667, 15]) <= TOL)
 
 
+def test_cache():
+    lm = OLSRegressionSolver()
+    x = np.asarray([[1, 1], [1, 1], [1, 1], [1, 2]])
+    y = np.asarray([3, 8, 9, 15])
+    lm.fit(x, y, fit_intercept=True, cache=False)
+
+    assert lm.normal_eqs is None
+    assert lm.hat_vals is None
+
+    lm.fit(x, y, fit_intercept=True, cache=True)
+
+    assert lm.normal_eqs is not None
+    assert lm.hat_vals is not None
+    assert lm.coefficients is not None
+
+
 ######################
 # Intermediate tests #
 ######################
@@ -209,19 +225,19 @@ def test_residuals_no_weights(random_data_no_weights):
     x = random_data_no_weights[["x0", "x1", "x2", "x3", "x4"]].values
     y = random_data_no_weights["y"].values.reshape(-1, 1)
     lm.fit(x, y, fit_intercept=False)
-    predictions = lm.predict(x)
+    lm.predict(x)
 
-    residuals = lm.residuals(y, predictions, loo=False, center=False)
-
+    residuals = lm.residuals(x, y, K=None, center=False)
     assert residuals[0] == pytest.approx(0.885973530)
     assert residuals[-1] == pytest.approx(0.841996302)
 
-    residuals = lm.residuals(y, predictions, loo=True, center=False)
+    # equivalent of leave-one-out residuals
+    residuals = lm.residuals(x, y, K=100, center=False)
 
     assert residuals[0] == pytest.approx(0.920112164)
     assert residuals[-1] == pytest.approx(0.875896477)
 
-    residuals = lm.residuals(y, predictions, loo=True, center=True)
+    residuals = lm.residuals(x, y, K=100, center=True)
     assert np.sum(residuals) == pytest.approx(0)
 
 
@@ -232,19 +248,19 @@ def test_residuals_weights(random_data_weights):
     weights = random_data_weights["weights"].values
 
     lm.fit(x, y, weights=weights, fit_intercept=False)
-    predictions = lm.predict(x)
+    lm.predict(x)
 
-    residuals = lm.residuals(y, predictions, loo=False, center=False)
+    residuals = lm.residuals(x, y, weights=weights, K=None, center=False)
 
     assert residuals[0] == pytest.approx(-1.971798590)
     assert residuals[-1] == pytest.approx(-1.373951578)
 
-    residuals = lm.residuals(y, predictions, loo=True, center=False)
+    residuals = lm.residuals(x, y, weights=weights, K=100, center=False)
 
     assert residuals[0] == pytest.approx(-1.999718445)
     assert residuals[-1] == pytest.approx(-1.438563033)
 
-    residuals = lm.residuals(y, predictions, loo=True, center=True)
+    residuals = lm.residuals(x, y, k=100, center=True)
     assert np.sum(residuals) == pytest.approx(0)
 
 

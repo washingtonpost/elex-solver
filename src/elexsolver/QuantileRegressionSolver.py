@@ -31,6 +31,7 @@ class QuantileRegressionSolver(LinearSolver):
         # b_eq is the equality constraint vector (ie. A_eq @ x = b_eq)
         # bounds are the (min, max) possible values of every element of x
         res = linprog(-1 * S, A_eq=Phi.T, b_eq=zeros, bounds=bounds, method="highs", options={"presolve": False})
+
         # marginal are the dual values, since we are solving the dual this is equivalent to the primal
         return -1 * res.eqlin.marginals
 
@@ -84,6 +85,7 @@ class QuantileRegressionSolver(LinearSolver):
         regularize_intercept: bool = False,
         n_feat_ignore_reg: int = 0,
         normalize_weights: bool = True,
+        cache: bool = True,
     ):
         """
         Fits quantile regression
@@ -105,23 +107,40 @@ class QuantileRegressionSolver(LinearSolver):
                 raise ZeroDivisionError
             weights = weights / weights_sum
 
+        if y.ndim == 1:  # code expects 2-dim array
+            y = y.reshape(-1, 1)
+
         # _fit assumes that taus is list, so if we want to do one value of tau then turn into a list
         if isinstance(taus, float):
             taus = [taus]
-
+        else:
+            assert y.shape[1] == 1  # you can either have multiple taus or multiple ys
+        coefficients_array = []
         for tau in taus:
-            if lambda_ > 0:
-                coefficients = self._fit_with_regularization(
-                    x, y, weights, tau, lambda_, regularize_intercept, n_feat_ignore_reg
-                )
-            else:
-                coefficients = self._fit(x, y, weights, tau)
-            self.coefficients.append(coefficients)
+            for y_arr in y.T:
+                if lambda_ > 0:
+                    coefficients = self._fit_with_regularization(
+                        x, y_arr, weights, tau, lambda_, regularize_intercept, n_feat_ignore_reg
+                    )
+                else:
+                    coefficients = self._fit(x, y_arr, weights, tau)
+                coefficients_array.append(coefficients)
 
-    def predict(self, x: np.ndarray) -> np.ndarray:
+        coefficients_array = np.asarray(coefficients_array).T
+        if cache:
+            self.coefficients = coefficients_array
+
+        return coefficients_array
+
+    def predict(self, x: np.ndarray, coefficients: np.ndarray | None = None) -> np.ndarray:
         """
         Use coefficients to predict
         """
         self._check_any_element_nan_or_inf(x)
 
-        return self.coefficients @ x.T
+        if coefficients is None:
+            preds = x @ self.coefficients
+        else:
+            preds = x @ coefficients
+
+        return preds
